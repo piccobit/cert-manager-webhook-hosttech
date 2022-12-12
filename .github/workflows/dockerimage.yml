@@ -11,6 +11,8 @@ jobs:
   docker:
     runs-on: ubuntu-22.04
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -28,7 +30,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: piccobit/cert-manager-webhook-hosttech:v0.1.0

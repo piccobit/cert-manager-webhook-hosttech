@@ -32,4 +32,4 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          tags: piccobit/cert-manager-webhook-hosttech:v0.1.0
+          tags: piccobit/cert-manager-webhook-hosttech:${{  github.ref_name }}"

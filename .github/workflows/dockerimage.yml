@@ -31,4 +31,4 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: piccobit/cert-manager-webhook-hosttech:{{ env.GITHUB_REF_NAME }}
+          tags: piccobit/cert-manager-webhook-hosttech:${{ env.GITHUB_REF_NAME }}

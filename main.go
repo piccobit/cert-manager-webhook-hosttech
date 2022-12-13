@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-const GroupNameKey = "CUSTOM_DNS_PROVIDER_SOLVER_GROUP_NAME"
+const GroupNameKey = "GROUP_NAME"
 
 func main() {
 	// This will register our custom DNS provider with the webhook serving

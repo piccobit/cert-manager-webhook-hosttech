@@ -12,12 +12,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 )
 
-const GroupName = "acme.badsource.codes"
+const GroupNameKey = "CUSTOM_DNS_PROVIDER_SOLVER_GROUP_NAME"
 
 func main() {
 	// This will register our custom DNS provider with the webhook serving
@@ -25,7 +26,13 @@ func main() {
 	// You can register multiple DNS provider implementations with a single
 	// webhook, where the Name() method will be used to disambiguate between
 	// the different implementations.
-	cmd.RunWebhookServer(GroupName,
+
+	groupName := os.Getenv(GroupNameKey)
+	if len(groupName) == 0 {
+		panic(fmt.Errorf("environment variable '%s' with the group name is missing", GroupNameKey))
+	}
+
+	cmd.RunWebhookServer(groupName,
 		&customDNSProviderSolver{},
 	)
 }

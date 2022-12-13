@@ -5,15 +5,15 @@
 # inform cert-manager of where to send ChallengePayload resources in order to
 # solve the DNS01 challenge.
 # This group name should be **unique**, hence using your own company's domain
-# here is recommended.
-groupName: acme.mycompany.com
+# here is recommended.FROM golang:1.14.0-alpine AS build_deps
+groupName: acme.yourdomain.tld
 
 certManager:
   namespace: cert-manager
   serviceAccountName: cert-manager
 
 image:
-  repository: mycompany/webhook-image
+  repository: piccobit/cert-manager-webhook-hosttech
   tag: latest
   pullPolicy: IfNotPresent
 
@@ -22,7 +22,10 @@ fullnameOverride: ""
 
 service:
   type: ClusterIP
-  port: 443
+  port: 8443
+
+secretName:
+  - hosttech-secret
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

@@ -6,8 +6,6 @@ IMAGE_TAG := "0.1.0"
 
 OUT := $(shell pwd)/_out
 
-KUBE_VERSION=1.25.0
-
 $(shell mkdir -p "$(OUT)")
 export TEST_ASSET_ETCD=_test/kubebuilder/bin/etcd
 export TEST_ASSET_KUBE_APISERVER=_test/kubebuilder/bin/kube-apiserver

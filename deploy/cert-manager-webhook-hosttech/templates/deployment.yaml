@@ -33,8 +33,7 @@ spec:
             - name: GROUP_NAME
               value: {{ .Values.groupName | quote }}
           ports:
-            - name: https
-              containerPort: 8443
+            - containerPort: 8443
               protocol: TCP
           livenessProbe:
             httpGet:

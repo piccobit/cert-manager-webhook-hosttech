@@ -160,3 +160,42 @@ subjects:
     kind: ServiceAccount
     name: {{ include "cert-manager-webhook-hosttech.fullname" . }}
     namespace: {{ .Release.Namespace }}
+---
+# Grant cert-manager permission to read secrets from cert-manager ns (i.e. to read the api key for hosttech)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "cert-manager-webhook-hosttech.fullname" . }}:hosttech-auth
+  namespace: {{ .Values.certManager.namespace }}
+  labels:
+    app: {{ include "cert-manager-webhook-hosttech.name" . }}
+    chart: {{ include "cert-manager-webhook-hosttech.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+rules:
+  - apiGroups:
+      - ''
+    resources:
+      - 'secrets'
+    verbs:
+      - 'get'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "cert-manager-webhook-hosttech.fullname" . }}:hosttech-auth
+  namespace: {{ .Values.certManager.namespace }}
+  labels:
+    app: {{ include "cert-manager-webhook-hosttech.name" . }}
+    chart: {{ include "cert-manager-webhook-hosttech.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "cert-manager-webhook-hosttech.fullname" . }}:hosttech-auth
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: {{ include "cert-manager-webhook-hosttech.fullname" . }}
+    namespace: {{ .Values.certManager.namespace }}

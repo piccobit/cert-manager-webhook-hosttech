@@ -17,8 +17,8 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
-nameOverride: "hosttech"
-fullnameOverride: "cert-manager-webhook-hosttech"
+nameOverride: ""
+fullnameOverride: ""
 
 service:
   type: ClusterIP

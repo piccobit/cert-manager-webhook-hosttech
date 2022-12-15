@@ -24,9 +24,6 @@ service:
   type: ClusterIP
   port: 8443
 
-ingress:
-  clusterIssuer: letsencrypt
-
 secretName:
   - hosttech-secret
 

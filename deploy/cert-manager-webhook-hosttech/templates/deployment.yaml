@@ -28,13 +28,13 @@ spec:
           args:
             - --tls-cert-file=/tls/tls.crt
             - --tls-private-key-file=/tls/tls.key
-            - --secure-port=8443
+            - --secure-port={{ .Values.service.port }}
           env:
             - name: GROUP_NAME
               value: {{ .Values.groupName | quote }}
           ports:
-            - containerPort: 8443
-              protocol: TCP
+            - containerPort: {{ .Values.service.port }}
+              protocol: {{ .Values.service.protocol }}
           livenessProbe:
             httpGet:
               scheme: HTTPS

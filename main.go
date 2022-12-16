@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	acmeV1 "github.com/cert-manager/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 	"github.com/cert-manager/cert-manager/pkg/acme/webhook/cmd"
@@ -116,15 +115,14 @@ func (c *customDNSProviderSolver) getZone(crZone string) (*internal.Zone, error)
 		EnableDump().       // Enable dump at request level to help troubleshoot, log content only when an unexpected exception occurs.
 		Get(c.cfg.APIURL + "/api/user/v1/zones")
 	if err != nil {
-		logger.Error(err, "Could not find zone", "zone", zone, "status", resp.Status)
 		return nil, err
 	} else if errMsg != nil {
-		logger.Error(err, "Could not find zone", "zone", zone, "errMsg", errMsg)
-		return nil, err
+		return nil, fmt.Errorf("could not find zone '%s': errMsg: '%v'", zone, errMsg)
 	} else if len(result.Data) == 0 {
-		logger.Error(errors.New("could not find zone"), "zone", zone)
-		return nil, err
+		return nil, fmt.Errorf("could not find zone '%s'", zone)
 	}
+
+	_ = resp
 
 	zoneInfo := result.Data[0]
 
@@ -146,15 +144,17 @@ func (c *customDNSProviderSolver) addRecord() error {
 		c.challengeRequest.ResolvedFQDN,
 		"."+c.challengeRequest.ResolvedZone)
 
+	challenge := c.challengeRequest.Key
+
 	var requestBody = internal.TXTRecordRequest{
 		Type:    "TXT",
 		Name:    acmeDomain,
-		Text:    c.challengeRequest.Key,
+		Text:    challenge,
 		TTL:     3600,
 		Comment: "Hosttech Solver",
 	}
 
-	logger.Info("Adding challenge to nameserver", "domain", acmeDomain, "challenge", c.challengeRequest.Key)
+	logger.Info("Adding challenge to nameserver", "acmeDomain", acmeDomain, "challenge", challenge)
 
 	resp, err := c.client.R().
 		SetBearerAuthToken(c.token).
@@ -168,9 +168,9 @@ func (c *customDNSProviderSolver) addRecord() error {
 	if err != nil {
 		return err
 	} else if errMsg != nil {
-		return fmt.Errorf("could not add zone '%s' with key '%s': %v", acmeDomain, c.challengeRequest.Key, errMsg)
+		return fmt.Errorf("could not add challenge '%s' to nameserver: acmeDomain: '%s', errMsg: '%v'", challenge, acmeDomain, errMsg)
 	} else if result.Data.ID == 0 {
-		return fmt.Errorf("could not add zone '%s' with key '%s': %v", acmeDomain, c.challengeRequest.Key, errMsg)
+		return fmt.Errorf("could not add challenge '%s' to nameserver: acmeDomain: '%s'", challenge, acmeDomain)
 	}
 
 	_ = resp
@@ -195,11 +195,15 @@ func (c *customDNSProviderSolver) getRecords(zoneID int) (*internal.TXTRecordsRe
 		Get(c.cfg.APIURL + "/api/user/v1/zones/{zoneID}/records")
 	if err != nil {
 		return nil, err
+	} else if errMsg != nil {
+		return nil, fmt.Errorf("could not get records for zone with ID '%d': errMsg: '%v'", zoneID, errMsg)
+	} else if len(result.Data) == 0 {
+		return nil, fmt.Errorf("could not get records for zone with ID '%d'", zoneID)
 	}
 
 	_ = resp
 
-	logger.Info("Found the following records", "records", result)
+	logger.Info("Got the following records", "records", result)
 
 	return &result, nil
 }
@@ -245,6 +249,8 @@ func (c *customDNSProviderSolver) deleteRecord() error {
 				Delete(c.cfg.APIURL + "/api/user/v1/zones/{zoneID}/records/{recordID}")
 			if err != nil {
 				return err
+			} else if errMsg != nil {
+				return fmt.Errorf("could not delete TXT record '%s' from zone '%s'", record.Name, zoneInfo.Name)
 			}
 
 			_ = resp

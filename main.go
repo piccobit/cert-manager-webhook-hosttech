@@ -302,11 +302,18 @@ func (c *customDNSProviderSolver) initialize(cr *acmeV1.ChallengeRequest) error 
 		}
 	}
 
-	var bToken []byte
+	encodedToken := secret.Data["token"]
 
-	_, err = base64.StdEncoding.Decode(bToken, secret.Data["token"])
+	decodedToken := make([]byte, base64.StdEncoding.DecodedLen(len(encodedToken)))
 
-	c.token = string(bToken)
+	n, err := base64.StdEncoding.Decode(decodedToken, encodedToken)
+	if err != nil {
+		return fmt.Errorf("decoding of the secret failed")
+	}
+
+	decodedToken = decodedToken[:n]
+
+	c.token = string(decodedToken)
 	c.client = req.C().SetTimeout(120*time.Second)
 
 	logger.WithName("initialize").Info("Secret", "c.token", c.token)

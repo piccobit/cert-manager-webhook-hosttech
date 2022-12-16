@@ -304,6 +304,8 @@ func (c *customDNSProviderSolver) initialize(cr *acmeV1.ChallengeRequest) error 
 
 	encodedToken := secret.Data["token"]
 
+	logger.WithName("initialize").Info("Encoded secret", "encodedToken", encodedToken, "resourceNamespace", cr.ResourceNamespace)
+
 	decodedToken := make([]byte, base64.StdEncoding.DecodedLen(len(encodedToken)))
 
 	n, err := base64.StdEncoding.Decode(decodedToken, encodedToken)

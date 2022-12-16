@@ -102,6 +102,8 @@ func (c *customDNSProviderSolver) Name() string {
 func (c *customDNSProviderSolver) getZone(crZone string) (*internal.Zone, error) {
 	zone := strings.TrimSuffix(crZone, ".")
 
+	logger.Info("Getting zone information from nameserver", "zone", zone)
+
 	var result internal.ZonesResponse
 	var errMsg interface{}
 
@@ -124,6 +126,8 @@ func (c *customDNSProviderSolver) getZone(crZone string) (*internal.Zone, error)
 	_ = resp
 
 	zoneInfo := result.Data[0]
+
+	logger.Info("Got zone information from nameserver", "zone", zoneInfo)
 
 	return &zoneInfo, nil
 }
@@ -148,6 +152,8 @@ func (c *customDNSProviderSolver) addRecord() error {
 		TTL:     3600,
 		Comment: "Hosttech Solver",
 	}
+
+	logger.Info("Adding challenge to nameserver", "domain", acmeDomain, "challenge", c.challengeRequest.Key)
 
 	resp, err := c.client.R().
 		SetBearerAuthToken(c.token).
@@ -175,6 +181,8 @@ func (c *customDNSProviderSolver) getRecords(zoneID int) (*internal.TXTRecordsRe
 	var result internal.TXTRecordsResponse
 	var errMsg interface{}
 
+	logger.Info("Getting TXT records of the zone", "zoneID", zoneID)
+
 	resp, err := c.client.R().
 		SetBearerAuthToken(c.token).
 		SetHeader("Accept", "application/json").
@@ -189,6 +197,8 @@ func (c *customDNSProviderSolver) getRecords(zoneID int) (*internal.TXTRecordsRe
 	}
 
 	_ = resp
+
+	logger.Info("Found the following records", "records", result)
 
 	return &result, nil
 }
@@ -217,6 +227,12 @@ func (c *customDNSProviderSolver) deleteRecord() error {
 				"zoneID":   strconv.Itoa(zoneInfo.ID),
 				"recordID": strconv.Itoa(record.ID),
 			}
+
+			logger.Info("Deleting TXT record on nameserver",
+				"zone", zoneInfo.Name,
+				"record.Name", record.Name,
+				"record.Text", record.Text,
+			)
 
 			resp, err := c.client.R().
 				SetBearerAuthToken(c.token).

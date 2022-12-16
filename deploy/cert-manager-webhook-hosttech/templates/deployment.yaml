@@ -25,16 +25,40 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.debug }}
+          cmd:
+            - dlv
+          args:
+            - --listen=:40000
+            - --headless=true
+            - --api-version=2
+            - exec
+            - webhook
+            - --tls-cert-file=/tls/tls.crt
+            - --tls-private-key-file=/tls/tls.key
+            - --secure-port={{ .Values.service.port }}
+          {{- else }}
+          cmd:
+            - webhook
           args:
             - --tls-cert-file=/tls/tls.crt
             - --tls-private-key-file=/tls/tls.key
             - --secure-port={{ .Values.service.port }}
+          {{- end }}
           env:
             - name: GROUP_NAME
               value: {{ .Values.groupName | quote }}
           ports:
             - containerPort: {{ .Values.service.port }}
-              protocol: {{ .Values.service.protocol }}
+              protocol: TCP
+          {{- if .Values.debug }}
+            - containerPort: 40000
+              protocol: TCP
+          securityContext:
+            capabilities:
+              add:
+                SYS_PTRACE
+          {{- end }}
           livenessProbe:
             httpGet:
               scheme: HTTPS

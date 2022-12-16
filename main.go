@@ -249,9 +249,10 @@ func (c *customDNSProviderSolver) Present(cr *acmeV1.ChallengeRequest) error {
 	err = c.addRecord()
 	if err != nil {
 		logger.Error(err, "adding the record failed")
+		return err
 	}
 
-	return err
+	return nil
 }
 
 func (c *customDNSProviderSolver) init(cr *acmeV1.ChallengeRequest) error {

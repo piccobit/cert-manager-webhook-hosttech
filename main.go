@@ -302,16 +302,14 @@ func (c *customDNSProviderSolver) initialize(cr *acmeV1.ChallengeRequest) error 
 		}
 	}
 
-	bufToken, err := base64.StdEncoding.DecodeString(string(secret.Data["token"]))
-	if err != nil {
-		return err
-	}
+	var bToken []byte
 
-	c.token = string(bufToken)
+	_, err = base64.StdEncoding.Decode(bToken, secret.Data["token"])
 
-	logger.WithName("initialize").Info("Secret", "token", c.token)
-
+	c.token = string(bToken)
 	c.client = req.C().SetTimeout(120*time.Second)
+
+	logger.WithName("initialize").Info("Secret", "c.token", c.token)
 
 	return nil
 }

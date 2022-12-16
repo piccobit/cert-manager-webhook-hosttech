@@ -6,19 +6,28 @@ import (
 	"fmt"
 	acmeV1 "github.com/cert-manager/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 	"github.com/cert-manager/cert-manager/pkg/acme/webhook/cmd"
+	"github.com/go-logr/logr"
 	"github.com/imroc/req/v3"
 	"github.com/piccobit/cert-manager-webhook-hosttech/internal"
 	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/klog/klogr"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 )
 
-const GroupNameKey = "GROUP_NAME"
+const (
+	GroupNameKey = "GROUP_NAME"
+	DebugEnabledKey = "DEBUG_HOSTTECH"
+)
+
+var (
+	logger logr.Logger
+)
 
 func main() {
 	// This will register our custom DNS provider with the webhook serving
@@ -30,6 +39,10 @@ func main() {
 	groupName := os.Getenv(GroupNameKey)
 	if len(groupName) == 0 {
 		panic(fmt.Errorf("environment variable '%s' with the group name is missing", GroupNameKey))
+	}
+
+	if len(os.Getenv(DebugEnabledKey)) != 0 {
+		logger = klogr.New()
 	}
 
 	cmd.RunWebhookServer(groupName,
@@ -69,8 +82,8 @@ type customDNSProviderConfig struct {
 	// These fields will be set by users in the
 	// `issuer.spec.acme.dns01.providers.webhook.config` field.
 
-	APIURL     string `json:"api_url"`
-	SecretName string `json:"secret_name"`
+	APIURL     string `json:"apiURL"`
+	SecretName string `json:"secretName"`
 }
 
 // Name is used as the name for this DNS solver when referencing it on the ACME
@@ -80,7 +93,7 @@ type customDNSProviderConfig struct {
 // within a single webhook deployment**.
 // For example, `cloudflare` may be used as the name of a solver.
 func (c *customDNSProviderSolver) Name() string {
-	return "hosttech-resolver"
+	return "hosttech"
 }
 
 func (c *customDNSProviderSolver) getZone(crZone string) (*internal.Zone, error) {
@@ -229,10 +242,16 @@ func (c *customDNSProviderSolver) deleteRecord() error {
 func (c *customDNSProviderSolver) Present(cr *acmeV1.ChallengeRequest) error {
 	err := c.init(cr)
 	if err != nil {
+		logger.Error(err, "presenting the challenge failed")
 		return err
 	}
 
-	return c.addRecord()
+	err = c.addRecord()
+	if err != nil {
+		logger.Error(err, "adding the record failed")
+	}
+
+	return err
 }
 
 func (c *customDNSProviderSolver) init(cr *acmeV1.ChallengeRequest) error {

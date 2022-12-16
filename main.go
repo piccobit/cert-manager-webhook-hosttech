@@ -303,6 +303,8 @@ func (c *customDNSProviderSolver) initialize(cr *acmeV1.ChallengeRequest) error 
 
 	c.token = string(secret.Data["token"])
 
+	logger.WithName("initialize").Info("Secret", "token", secret.Data["token"])
+
 	c.client = req.C().SetTimeout(120*time.Second)
 
 	return nil
@@ -363,6 +365,11 @@ func loadConfig(cfgJSON *extapi.JSON) (*customDNSProviderConfig, error) {
 	if err := json.Unmarshal(cfgJSON.Raw, &cfg); err != nil {
 		return nil, fmt.Errorf("error decoding solver config: %v", err)
 	}
+
+	logger.WithName("loadConfig").Info("Config loaded",
+		"APIURL", cfg.APIURL,
+		"SecretName", cfg.SecretName,
+	)
 
 	return &cfg, nil
 }

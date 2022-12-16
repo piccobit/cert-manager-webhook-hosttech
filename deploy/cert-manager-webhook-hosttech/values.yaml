@@ -22,7 +22,7 @@ fullnameOverride: ""
 
 service:
   type: ClusterIP
-  port: 8443
+  port: 443
 
 secretName:
   - hosttech-secret
@@ -44,3 +44,5 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+debug: false

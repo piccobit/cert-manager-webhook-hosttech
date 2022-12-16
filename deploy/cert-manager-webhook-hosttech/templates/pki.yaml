@@ -74,3 +74,5 @@ spec:
     - {{ include "cert-manager-webhook-hosttech.fullname" . }}
     - {{ include "cert-manager-webhook-hosttech.fullname" . }}.{{ .Release.Namespace }}
     - {{ include "cert-manager-webhook-hosttech.fullname" . }}.{{ .Release.Namespace }}.svc
+    - {{ include "cert-manager-webhook-hosttech.fullname" . }}.{{ .Release.Namespace }}.svc.cluster
+    - {{ include "cert-manager-webhook-hosttech.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local

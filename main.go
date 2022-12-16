@@ -266,22 +266,22 @@ func (c *customDNSProviderSolver) deleteRecord() error {
 // cert-manager itself will later perform a self check to ensure that the
 // solver has correctly configured the DNS provider.
 func (c *customDNSProviderSolver) Present(cr *acmeV1.ChallengeRequest) error {
-	err := c.init(cr)
+	err := c.initialize(cr)
 	if err != nil {
-		logger.Error(err, "Presenting the challenge failed")
+		logger.WithName("Preset").Error(err, "Presenting the challenge failed")
 		return err
 	}
 
 	err = c.addRecord()
 	if err != nil {
-		logger.Error(err, "Adding the record failed")
+		logger.WithName("Preset").Error(err, "Adding the record failed")
 		return err
 	}
 
 	return nil
 }
 
-func (c *customDNSProviderSolver) init(cr *acmeV1.ChallengeRequest) error {
+func (c *customDNSProviderSolver) initialize(cr *acmeV1.ChallengeRequest) error {
 	var err error
 
 	c.challengeRequest = cr
@@ -315,12 +315,19 @@ func (c *customDNSProviderSolver) init(cr *acmeV1.ChallengeRequest) error {
 // This is in order to facilitate multiple DNS validations for the same domain
 // concurrently.
 func (c *customDNSProviderSolver) CleanUp(cr *acmeV1.ChallengeRequest) error {
-	err := c.init(cr)
+	err := c.initialize(cr)
 	if err != nil {
+		logger.WithName("Cleanup").Error(err, "Initialization failed")
 		return err
 	}
 
-	return c.deleteRecord()
+	err = c.deleteRecord()
+	if err != nil {
+		logger.WithName("Cleanup").Error(err, "Deleting the record failed")
+		return err
+	}
+
+	return nil
 }
 
 // Initialize will be called when the webhook first starts.
@@ -335,6 +342,7 @@ func (c *customDNSProviderSolver) CleanUp(cr *acmeV1.ChallengeRequest) error {
 func (c *customDNSProviderSolver) Initialize(kubeClientConfig *rest.Config, stopCh <-chan struct{}) error {
 	cl, err := kubernetes.NewForConfig(kubeClientConfig)
 	if err != nil {
+		logger.WithName("Initialize").Error(err, "Initialization failed")
 		return err
 	}
 
@@ -351,6 +359,7 @@ func loadConfig(cfgJSON *extapi.JSON) (*customDNSProviderConfig, error) {
 	if cfgJSON == nil {
 		return &cfg, nil
 	}
+
 	if err := json.Unmarshal(cfgJSON.Raw, &cfg); err != nil {
 		return nil, fmt.Errorf("error decoding solver config: %v", err)
 	}

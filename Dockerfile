@@ -23,6 +23,7 @@ FROM alpine:3.9
 RUN apk add --no-cache ca-certificates
 
 COPY --from=build /workspace/webhook* /usr/local/bin
+COPY --from=build_deps /go/bin/dlv /usr/local/bin
 
 EXPOSE 40000
 

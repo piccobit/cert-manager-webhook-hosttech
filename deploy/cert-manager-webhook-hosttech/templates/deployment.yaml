@@ -25,8 +25,8 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- if .Values.debug }}
-          cmd:
+{{- if .Values.debug }}
+          command:
             - dlv
           args:
             - --listen=:40000
@@ -34,31 +34,24 @@ spec:
             - --api-version=2
             - exec
             - webhook
-            - --tls-cert-file=/tls/tls.crt
-            - --tls-private-key-file=/tls/tls.key
-            - --secure-port={{ .Values.service.port }}
-          {{- else }}
-          cmd:
+{{- else }}
+          command:
             - webhook
           args:
+{{- end }}
             - --tls-cert-file=/tls/tls.crt
             - --tls-private-key-file=/tls/tls.key
             - --secure-port={{ .Values.service.port }}
-          {{- end }}
           env:
             - name: GROUP_NAME
               value: {{ .Values.groupName | quote }}
           ports:
             - containerPort: {{ .Values.service.port }}
               protocol: TCP
-          {{- if .Values.debug }}
+{{- if .Values.debug }}
             - containerPort: 40000
               protocol: TCP
-          securityContext:
-            capabilities:
-              add:
-                SYS_PTRACE
-          {{- end }}
+{{- end }}
           livenessProbe:
             httpGet:
               scheme: HTTPS
@@ -75,19 +68,25 @@ spec:
               readOnly: true
           resources:
 {{ toYaml .Values.resources | indent 12 }}
+{{- if .Values.debug }}
+          securityContext:
+            capabilities:
+              add:
+                - SYS_PTRACE
+{{- end }}
       volumes:
         - name: certs
           secret:
             secretName: {{ include "cert-manager-webhook-hosttech.servingCertificate" . }}
-    {{- with .Values.nodeSelector }}
+{{- with .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.affinity }}
+{{- end }}
+{{- with .Values.affinity }}
       affinity:
 {{ toYaml . | indent 8 }}
-    {{- end }}
-    {{- with .Values.tolerations }}
+{{- end }}
+{{- with .Values.tolerations }}
       tolerations:
 {{ toYaml . | indent 8 }}
-    {{- end }}
+{{- end }}

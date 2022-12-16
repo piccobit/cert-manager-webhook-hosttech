@@ -13,7 +13,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/klog/klogr"
+	"k8s.io/klog/v2"
+	"k8s.io/klog/v2/klogr"
 	"os"
 	"strconv"
 	"strings"
@@ -22,7 +23,6 @@ import (
 
 const (
 	GroupNameKey = "GROUP_NAME"
-	DebugEnabledKey = "DEBUG_HOSTTECH"
 )
 
 var (
@@ -36,18 +36,21 @@ func main() {
 	// webhook, where the Name() method will be used to disambiguate between
 	// the different implementations.
 
+	klog.InitFlags(nil)
+
 	groupName := os.Getenv(GroupNameKey)
 	if len(groupName) == 0 {
 		panic(fmt.Errorf("environment variable '%s' with the group name is missing", GroupNameKey))
 	}
 
-	if len(os.Getenv(DebugEnabledKey)) != 0 {
-		logger = klogr.New()
-	}
+	logger = klogr.New().WithName("cert-manager-webhook-hosttech")
+	logger.Info("Hello from cert-manager-webhook-hosttech")
 
 	cmd.RunWebhookServer(groupName,
 		&customDNSProviderSolver{},
 	)
+
+	klog.Flush()
 }
 
 // customDNSProviderSolver implements the provider-specific logic needed to

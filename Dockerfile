@@ -24,4 +24,6 @@ RUN apk add --no-cache ca-certificates
 
 COPY --from=build /workspace/webhook* /usr/local/bin
 
+EXPOSE 40000
+
 CMD ["webhook"]

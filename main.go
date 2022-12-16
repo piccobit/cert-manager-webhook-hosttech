@@ -308,7 +308,7 @@ func (c *customDNSProviderSolver) initialize(cr *acmeV1.ChallengeRequest) error 
 
 	n, err := base64.StdEncoding.Decode(decodedToken, encodedToken)
 	if err != nil {
-		return fmt.Errorf("decoding of the secret failed")
+		return err
 	}
 
 	decodedToken = decodedToken[:n]

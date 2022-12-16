@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	acmeV1 "github.com/cert-manager/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 	"github.com/cert-manager/cert-manager/pkg/acme/webhook/cmd"
@@ -43,8 +44,7 @@ func main() {
 		panic(fmt.Errorf("environment variable '%s' with the group name is missing", GroupNameKey))
 	}
 
-	logger = klogr.New().WithName("cert-manager-webhook-hosttech")
-	logger.Info("Hello from cert-manager-webhook-hosttech")
+	logger = klogr.New().WithName("cmw-hosttech")
 
 	cmd.RunWebhookServer(groupName,
 		&customDNSProviderSolver{},
@@ -116,18 +116,19 @@ func (c *customDNSProviderSolver) getZone(crZone string) (*internal.Zone, error)
 		EnableDump().       // Enable dump at request level to help troubleshoot, log content only when an unexpected exception occurs.
 		Get(c.cfg.APIURL + "/api/user/v1/zones")
 	if err != nil {
+		logger.Error(err, "Could not find zone", "zone", zone, "status", resp.Status)
 		return nil, err
 	} else if errMsg != nil {
-		return nil, fmt.Errorf("could not find zone '%s': %v", zone, errMsg)
+		logger.Error(err, "Could not find zone", "zone", zone, "errMsg", errMsg)
+		return nil, err
 	} else if len(result.Data) == 0 {
-		return nil, fmt.Errorf("could not find zone '%s'", zone)
+		logger.Error(errors.New("could not find zone"), "zone", zone)
+		return nil, err
 	}
-
-	_ = resp
 
 	zoneInfo := result.Data[0]
 
-	logger.Info("Got zone information from nameserver", "zone", zoneInfo)
+	logger.Info("Got zone information from nameserver", "zoneInfo", zoneInfo)
 
 	return &zoneInfo, nil
 }
@@ -229,7 +230,7 @@ func (c *customDNSProviderSolver) deleteRecord() error {
 			}
 
 			logger.Info("Deleting TXT record on nameserver",
-				"zone", zoneInfo.Name,
+				"zoneInfo.Name", zoneInfo.Name,
 				"record.Name", record.Name,
 				"record.Text", record.Text,
 			)
@@ -261,13 +262,13 @@ func (c *customDNSProviderSolver) deleteRecord() error {
 func (c *customDNSProviderSolver) Present(cr *acmeV1.ChallengeRequest) error {
 	err := c.init(cr)
 	if err != nil {
-		logger.Error(err, "presenting the challenge failed")
+		logger.Error(err, "Presenting the challenge failed")
 		return err
 	}
 
 	err = c.addRecord()
 	if err != nil {
-		logger.Error(err, "adding the record failed")
+		logger.Error(err, "Adding the record failed")
 		return err
 	}
 

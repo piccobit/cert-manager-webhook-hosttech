@@ -14,6 +14,13 @@ spec:
     - port: {{ .Values.service.port }}
       targetPort: {{ .Values.service.port }}
       protocol: TCP
+      name: https-cert-manager-webhook-hosttech
+{{- if .Values.debug.enabled }}
+    - port: {{ .Values.debug.port }}
+      targetPort: {{ .Values.debug.port }}
+      protocol: TCP
+      name: debug-cert-manager-webhook-hosttech
+{{- end }}
   selector:
     app: {{ include "cert-manager-webhook-hosttech.name" . }}
     release: {{ .Release.Name }}

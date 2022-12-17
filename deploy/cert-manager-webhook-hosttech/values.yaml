@@ -45,4 +45,6 @@ tolerations: []
 
 affinity: {}
 
-debug: false
+debug: 
+  enabled: false
+  port: 40000

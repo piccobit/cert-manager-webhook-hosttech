@@ -25,11 +25,11 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-{{- if .Values.debug }}
+{{- if .Values.debug.enabled }}
           command:
             - dlv
           args:
-            - --listen=:40000
+            - --listen=:{{ .Values.debug.port }}
             - --headless=true
             - --api-version=2
             - --accept-multiclient
@@ -53,11 +53,11 @@ spec:
           ports:
             - containerPort: {{ .Values.service.port }}
               protocol: TCP
-{{- if .Values.debug }}
+{{- if .Values.debug.enabled }}
             - containerPort: 40000
               protocol: TCP
 {{- end }}
-{{- if not .Values.debug }}
+{{- if not .Values.debug.enabled }}
           livenessProbe:
             httpGet:
               scheme: HTTPS
@@ -75,7 +75,7 @@ spec:
               readOnly: true
           resources:
 {{ toYaml .Values.resources | indent 12 }}
-{{- if .Values.debug }}
+{{- if .Values.debug.enabled }}
           securityContext:
             capabilities:
               add:

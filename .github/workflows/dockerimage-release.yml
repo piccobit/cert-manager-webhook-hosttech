@@ -5,7 +5,7 @@ on:
   push:
     tags:
       - 'v*'
-      - 'v*-rc*'
+      - '!v*-rc*'
 
 jobs:
   docker:
@@ -30,6 +30,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
+          file: ./Dockerfile
           platforms: linux/amd64
           push: true
           tags: piccobit/cert-manager-webhook-hosttech:${{  github.ref_name }}

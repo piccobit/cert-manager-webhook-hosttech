@@ -26,8 +26,6 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 {{- if .Values.debug.enabled }}
-          command:
-            - dlv
           args:
             - --listen=:{{ .Values.debug.port }}
             - --headless=true
@@ -40,8 +38,6 @@ spec:
             - --tls-private-key-file=/tls/tls.key
             - --secure-port={{ .Values.service.port }}
 {{- else }}
-          command:
-            - webhook
           args:
             - --tls-cert-file=/tls/tls.crt
             - --tls-private-key-file=/tls/tls.key

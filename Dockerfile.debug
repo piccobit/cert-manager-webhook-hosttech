@@ -4,6 +4,8 @@ RUN apk add --no-cache git
 
 WORKDIR /workspace
 
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
 COPY go.mod .
 COPY go.sum .
 
@@ -13,12 +15,17 @@ FROM build_deps AS build
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o webhook -ldflags '-s -w -extldflags "-static"' .
+RUN CGO_ENABLED=0 go build -o webhook -gcflags="all=-N -l" -ldflags '-extldflags "-static"' .
 
 FROM alpine:3.9
+
+ARG DEBUG_PORT=40000
 
 RUN apk add --no-cache ca-certificates
 
 COPY --from=build /workspace/webhook /usr/local/bin
+COPY --from=build_deps /go/bin/dlv /usr/local/bin
 
-ENTRYPOINT ["webhook"]
+EXPOSE $DEBUG_PORT
+
+ENTRYPOINT ["dlv"]

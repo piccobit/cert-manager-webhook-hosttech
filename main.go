@@ -107,12 +107,9 @@ func (c *customDNSProviderSolver) getZone(crZone string) (*internal.Zone, error)
 	var result internal.ZonesResponse
 	var errMsg interface{}
 
-	u, err := c.getAPIURL("/zones")
-	if err != nil {
-		return nil, err
-	}
+	u := c.cfg.APIURL + "/zones"
 
-	logger.WithName("getZone").Info("apiURL", "u", *u)
+	logger.WithName("getZone").Info("apiURL", "u", u)
 
 	resp, err := c.client.R().
 		SetBearerAuthToken(c.token).
@@ -121,7 +118,7 @@ func (c *customDNSProviderSolver) getZone(crZone string) (*internal.Zone, error)
 		SetResult(&result). // Unmarshal response into struct automatically if status code >= 200 and <= 299.
 		SetError(&errMsg). // Unmarshal response into struct automatically if status code >= 400.
 		EnableDump(). // Enable dump at request level to help troubleshoot, log content only when an unexpected exception occurs.
-		Get(*u)
+		Get(u)
 	if err != nil {
 		return nil, err
 	} else if errMsg != nil {
@@ -177,12 +174,9 @@ func (c *customDNSProviderSolver) addRecord() error {
 
 	logger.Info("Adding challenge to nameserver", "acmeDomain", acmeDomain, "challenge", challenge)
 
-	u, err := c.getAPIURL("/zones/{zoneID}/records")
-	if err != nil {
-		return err
-	}
+	u := c.cfg.APIURL + "/zones/{zoneID}/records"
 
-	logger.WithName("addRecord").Info("apiURL", "u", *u)
+	logger.WithName("addRecord").Info("apiURL", "u", u)
 
 	resp, err := c.client.R().
 		SetBearerAuthToken(c.token).
@@ -192,7 +186,7 @@ func (c *customDNSProviderSolver) addRecord() error {
 		SetResult(&result). // Unmarshal response into struct automatically if status code >= 200 and <= 299.
 		SetError(&errMsg).  // Unmarshal response into struct automatically if status code >= 400.
 		EnableDump().       // Enable dump at request level to help troubleshoot, log content only when an unexpected exception occurs.
-		Post(*u)
+		Post(u)
 	if err != nil {
 		return err
 	} else if errMsg != nil {
@@ -212,12 +206,9 @@ func (c *customDNSProviderSolver) getRecords(zoneID int) (*internal.TXTRecordsRe
 
 	logger.Info("Getting TXT records of the zone", "zoneID", zoneID)
 
-	u, err := c.getAPIURL("/zones/{zoneID}/records")
-	if err != nil {
-		return nil, err
-	}
+	u := c.cfg.APIURL + "/zones/{zoneID}/records"
 
-	logger.WithName("getRecords").Info("apiURL", "u", *u)
+	logger.WithName("getRecords").Info("apiURL", "u", u)
 
 	resp, err := c.client.R().
 		SetBearerAuthToken(c.token).
@@ -227,7 +218,7 @@ func (c *customDNSProviderSolver) getRecords(zoneID int) (*internal.TXTRecordsRe
 		SetResult(&result). // Unmarshal response into struct automatically if status code >= 200 and <= 299.
 		SetError(&errMsg).  // Unmarshal response into struct automatically if status code >= 400.
 		EnableDump().       // Enable dump at request level to help troubleshoot, log content only when an unexpected exception occurs.
-		Get(*u)
+		Get(u)
 	if err != nil {
 		return nil, err
 	} else if errMsg != nil {
@@ -274,12 +265,9 @@ func (c *customDNSProviderSolver) deleteRecord() error {
 				"record.Text", record.Text,
 			)
 
-			u, err := c.getAPIURL("/zones/{zoneID}/records/{recordID}")
-			if err != nil {
-				return err
-			}
+			u := c.cfg.APIURL + "/zones/{zoneID}/records/{recordID}"
 
-			logger.WithName("deleteRecord").Info("apiURL", "u", *u)
+			logger.WithName("deleteRecord").Info("apiURL", "u", u)
 
 			resp, err := c.client.R().
 				SetBearerAuthToken(c.token).
@@ -288,7 +276,7 @@ func (c *customDNSProviderSolver) deleteRecord() error {
 				SetResult(&result). // Unmarshal response into struct automatically if status code >= 200 and <= 299.
 				SetError(&errMsg).  // Unmarshal response into struct automatically if status code >= 400.
 				EnableDump().       // Enable dump at request level to help troubleshoot, log content only when an unexpected exception occurs.
-				Delete(*u)
+				Delete(u)
 			if err != nil {
 				return err
 			} else if errMsg != nil {

@@ -32,16 +32,21 @@ spec:
             - --listen=:40000
             - --headless=true
             - --api-version=2
+            - --accept-multiclient
             - exec
-            - webhook
+            - /usr/local/bin/webhook.debug
+            - --
+            - --tls-cert-file=/tls/tls.crt
+            - --tls-private-key-file=/tls/tls.key
+            - --secure-port={{ .Values.service.port }}
 {{- else }}
           command:
             - webhook
           args:
-{{- end }}
             - --tls-cert-file=/tls/tls.crt
             - --tls-private-key-file=/tls/tls.key
             - --secure-port={{ .Values.service.port }}
+{{- end }}
           env:
             - name: GROUP_NAME
               value: {{ .Values.groupName | quote }}
@@ -52,6 +57,7 @@ spec:
             - containerPort: 40000
               protocol: TCP
 {{- end }}
+{{- if not .Values.debug }}
           livenessProbe:
             httpGet:
               scheme: HTTPS
@@ -62,6 +68,7 @@ spec:
               scheme: HTTPS
               path: /healthz
               port: {{ .Values.service.port }}
+{{- end }}
           volumeMounts:
             - name: certs
               mountPath: /tls

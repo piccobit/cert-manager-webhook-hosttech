@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	acmeV1 "github.com/cert-manager/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
@@ -302,20 +301,9 @@ func (c *customDNSProviderSolver) initialize(cr *acmeV1.ChallengeRequest) error 
 		}
 	}
 
-	encodedToken := secret.Data["token"]
+	bToken := secret.Data["token"]
 
-	logger.WithName("initialize").Info("Encoded secret", "encodedToken", encodedToken, "resourceNamespace", cr.ResourceNamespace)
-
-	decodedToken := make([]byte, base64.StdEncoding.DecodedLen(len(encodedToken)))
-
-	n, err := base64.StdEncoding.Decode(decodedToken, encodedToken)
-	if err != nil {
-		return err
-	}
-
-	decodedToken = decodedToken[:n]
-
-	c.token = string(decodedToken)
+	c.token = string(bToken)
 	c.client = req.C().SetTimeout(120*time.Second)
 
 	logger.WithName("initialize").Info("Secret", "c.token", c.token)

@@ -15,6 +15,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
 	"k8s.io/klog/v2/klogr"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -106,14 +107,21 @@ func (c *customDNSProviderSolver) getZone(crZone string) (*internal.Zone, error)
 	var result internal.ZonesResponse
 	var errMsg interface{}
 
+	u, err := c.getAPIURL("/zones")
+	if err != nil {
+		return nil, err
+	}
+
+	logger.WithName("getZone").Info("apiURL", "u", *u)
+
 	resp, err := c.client.R().
 		SetBearerAuthToken(c.token).
 		SetHeader("Accept", "application/json").
 		SetQueryParam("query", zone).
 		SetResult(&result). // Unmarshal response into struct automatically if status code >= 200 and <= 299.
-		SetError(&errMsg).  // Unmarshal response into struct automatically if status code >= 400.
-		EnableDump().       // Enable dump at request level to help troubleshoot, log content only when an unexpected exception occurs.
-		Get(c.cfg.APIURL + "/api/user/v1/zones")
+		SetError(&errMsg). // Unmarshal response into struct automatically if status code >= 400.
+		EnableDump(). // Enable dump at request level to help troubleshoot, log content only when an unexpected exception occurs.
+		Get(*u)
 	if err != nil {
 		return nil, err
 	} else if errMsg != nil {
@@ -129,6 +137,19 @@ func (c *customDNSProviderSolver) getZone(crZone string) (*internal.Zone, error)
 	logger.Info("Got zone information from nameserver", "zoneInfo", zoneInfo)
 
 	return &zoneInfo, nil
+}
+
+func (c *customDNSProviderSolver) getAPIURL(cmd string) (*string, error) {
+	baseAPIURL, err := url.Parse(c.cfg.APIURL)
+	if err != nil {
+		return nil, err
+	}
+
+	apiURL := baseAPIURL.JoinPath(cmd)
+
+	u := baseAPIURL.ResolveReference(apiURL).String()
+
+	return &u, nil
 }
 
 func (c *customDNSProviderSolver) addRecord() error {
@@ -156,6 +177,13 @@ func (c *customDNSProviderSolver) addRecord() error {
 
 	logger.Info("Adding challenge to nameserver", "acmeDomain", acmeDomain, "challenge", challenge)
 
+	u, err := c.getAPIURL("/zones/{zoneID}/records")
+	if err != nil {
+		return err
+	}
+
+	logger.WithName("addRecord").Info("apiURL", "u", *u)
+
 	resp, err := c.client.R().
 		SetBearerAuthToken(c.token).
 		SetHeader("Accept", "application/json").
@@ -164,7 +192,7 @@ func (c *customDNSProviderSolver) addRecord() error {
 		SetResult(&result). // Unmarshal response into struct automatically if status code >= 200 and <= 299.
 		SetError(&errMsg).  // Unmarshal response into struct automatically if status code >= 400.
 		EnableDump().       // Enable dump at request level to help troubleshoot, log content only when an unexpected exception occurs.
-		Post(c.cfg.APIURL + "/api/user/v1/zones/{zoneID}/records")
+		Post(*u)
 	if err != nil {
 		return err
 	} else if errMsg != nil {
@@ -184,6 +212,13 @@ func (c *customDNSProviderSolver) getRecords(zoneID int) (*internal.TXTRecordsRe
 
 	logger.Info("Getting TXT records of the zone", "zoneID", zoneID)
 
+	u, err := c.getAPIURL("/zones/{zoneID}/records")
+	if err != nil {
+		return nil, err
+	}
+
+	logger.WithName("getRecords").Info("apiURL", "u", *u)
+
 	resp, err := c.client.R().
 		SetBearerAuthToken(c.token).
 		SetHeader("Accept", "application/json").
@@ -192,7 +227,7 @@ func (c *customDNSProviderSolver) getRecords(zoneID int) (*internal.TXTRecordsRe
 		SetResult(&result). // Unmarshal response into struct automatically if status code >= 200 and <= 299.
 		SetError(&errMsg).  // Unmarshal response into struct automatically if status code >= 400.
 		EnableDump().       // Enable dump at request level to help troubleshoot, log content only when an unexpected exception occurs.
-		Get(c.cfg.APIURL + "/api/user/v1/zones/{zoneID}/records")
+		Get(*u)
 	if err != nil {
 		return nil, err
 	} else if errMsg != nil {
@@ -239,6 +274,13 @@ func (c *customDNSProviderSolver) deleteRecord() error {
 				"record.Text", record.Text,
 			)
 
+			u, err := c.getAPIURL("/zones/{zoneID}/records/{recordID}")
+			if err != nil {
+				return err
+			}
+
+			logger.WithName("deleteRecord").Info("apiURL", "u", *u)
+
 			resp, err := c.client.R().
 				SetBearerAuthToken(c.token).
 				SetHeader("Accept", "application/json").
@@ -246,7 +288,7 @@ func (c *customDNSProviderSolver) deleteRecord() error {
 				SetResult(&result). // Unmarshal response into struct automatically if status code >= 200 and <= 299.
 				SetError(&errMsg).  // Unmarshal response into struct automatically if status code >= 400.
 				EnableDump().       // Enable dump at request level to help troubleshoot, log content only when an unexpected exception occurs.
-				Delete(c.cfg.APIURL + "/api/user/v1/zones/{zoneID}/records/{recordID}")
+				Delete(*u)
 			if err != nil {
 				return err
 			} else if errMsg != nil {

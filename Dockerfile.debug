@@ -28,4 +28,4 @@ COPY --from=build_deps /go/bin/dlv /usr/local/bin
 
 EXPOSE $DEBUG_PORT
 
-ENTRYPOINT ["dlv"]
+CMD ["webhook"]

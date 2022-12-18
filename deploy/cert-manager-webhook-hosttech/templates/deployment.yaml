@@ -26,6 +26,8 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 {{- if .Values.debug.enabled }}
+          command:
+            - dlv
           args:
             - --listen=:{{ .Values.debug.port }}
             - --headless=true

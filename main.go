@@ -336,7 +336,9 @@ func (c *customDNSProviderSolver) initialize(cr *acmeV1.ChallengeRequest) error 
 	c.token = string(bToken)
 	c.client = req.C().SetTimeout(120*time.Second)
 
-	logger.WithName("initialize").Info("Secret", "c.token", c.token)
+	visToken := c.token[:10] + "..." + c.token[len(c.token)-10:]
+
+	logger.WithName("initialize").Info("Secret", "c.token", visToken)
 
 	return nil
 }

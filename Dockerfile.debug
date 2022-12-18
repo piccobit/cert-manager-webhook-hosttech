@@ -15,7 +15,7 @@ FROM build_deps AS build
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o webhook -gcflags="all=-N -l" -ldflags '-extldflags "-static"' .
+RUN CGO_ENABLED=0 go build -o webhook -trimpath -gcflags="all=-N -l" -ldflags '-extldflags "-static"' .
 
 FROM alpine:3.9
 

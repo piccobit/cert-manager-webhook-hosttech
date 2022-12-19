@@ -1,12 +1,12 @@
 # ACME webhook for the hosttech DNS API
 
-This solver can be used when you want to use the cert-manager with the [hosttech DNS API](https://api.ns1.hosttech.eu/api/documentation/).
+This solver can be used when you want to use the **cert-manager** with the [hosttech DNS API](https://api.ns1.hosttech.eu/api/documentation/).
 
 ## Installation
 
 ### cert-manager
 
-Follow the [instructions](https://cert-manager.io/docs/installation/) using the cert-manager documentation to install it within your cluster.
+Follow the [instructions](https://cert-manager.io/docs/installation/) using the **cert-manager** documentation to install it within your cluster.
 
 ### Webhook
 
@@ -23,7 +23,7 @@ helm install --namespace cert-manager cert-manager-webhook-hosttech piccobit/cer
 ```bash
 helm install --namespace cert-manager cert-manager-webhook-hosttech .
 ```
-**Note**: The Kubernetes resources used to install the webhook should be deployed within the same namespace as the cert-manager.
+**Note**: The Kubernetes resources used to install the webhook should be deployed within the same namespace as the **cert-manager**.
 
 To uninstall the webhook run
 ```bash
@@ -103,7 +103,7 @@ spec:
 ### Running the test suite
 
 All DNS providers **must** run the DNS01 provider conformance testing suite,
-else they will have undetermined behaviour when used with cert-manager.
+else they will have undetermined behaviour when used with **cert-manager**.
 
 **It is essential that you configure and run the test suite when creating a
 DNS01 webhook.**

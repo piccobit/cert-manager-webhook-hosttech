@@ -5,7 +5,7 @@ on:
   push:
     tags:
       - 'v*'
-      - '!v*-rc*'
+      - '!v*+debug'
 
 jobs:
   docker:

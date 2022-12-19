@@ -1,42 +1,103 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/cert-manager/cert-manager/d53c0b9270f8cd90d908460d69502694e1838f5f/logo/logo-small.png" height="256" width="256" alt="cert-manager project logo" />
-</p>
+# ACME webhook for hosttech DNS API
 
-# ACME webhook example
+This solver can be used when you want to use the cert-manager with the [hosttech DNS API](https://api.ns1.hosttech.eu/api/documentation/).
 
-The ACME issuer type supports an optional 'webhook' solver, which can be used
-to implement custom DNS01 challenge solving logic.
+## Installation
 
-This is useful if you need to use cert-manager with a DNS provider that is not
-officially supported in cert-manager core.
+### cert-manager
 
-## Why not in core?
+Follow the [instructions](https://cert-manager.io/docs/installation/) using the cert-manager documentation to install it within your cluster.
 
-As the project & adoption has grown, there has been an influx of DNS provider
-pull requests to our core codebase. As this number has grown, the test matrix
-has become un-maintainable and so, it's not possible for us to certify that
-providers work to a sufficient level.
+### Webhook
 
-By creating this 'interface' between cert-manager and DNS providers, we allow
-users to quickly iterate and test out new integrations, and then packaging
-those up themselves as 'extensions' to cert-manager.
+#### Using public helm chart
+```bash
+helm repo add cert-manager-webhook-hosttech https://piccobit.github.io/cert-manager-webhook-hosttech
+# Replace the groupName value with your desired domain
+helm install --namespace cert-manager cert-manager-webhook-hosttech cert-manager-webhook-hosttech/cert-manager-webhook-hosttech --set groupName=acme.yourdomain.tld
+```
 
-We can also then provide a standardised 'testing framework', or set of
-conformance tests, which allow us to validate the a DNS provider works as
-expected.
+#### From local checkout
 
-## Creating your own webhook
+```bash
+helm install --namespace cert-manager cert-manager-webhook-hosttech deploy/cert-manager-webhook-hosttech
+```
+**Note**: The kubernetes resources used to install the webhook should be deployed within the same namespace as the cert-manager.
 
-Webhook's themselves are deployed as Kubernetes API services, in order to allow
-administrators to restrict access to webhooks with Kubernetes RBAC.
+To uninstall the webhook run
+```bash
+helm uninstall --namespace cert-manager cert-manager-webhook-hosttech
+```
 
-This is important, as otherwise it'd be possible for anyone with access to your
-webhook to complete ACME challenge validations and obtain certificates.
+## Issuer
 
-To make the set up of these webhook's easier, we provide a template repository
-that can be used to get started quickly.
+Create a `ClusterIssuer` or `Issuer` resource as following:
+```yaml
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    # The ACME server URL
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
 
-### Creating your own repository
+    # Email address used for ACME registration
+    email: mail@example.com # REPLACE THIS WITH YOUR EMAIL!!!
+
+    # Name of a secret used to store the ACME account private key
+    privateKeySecretRef:
+      name: letsencrypt-staging
+
+    solvers:
+      - dns01:
+          webhook:
+            # This group needs to be configured when installing the helm package, otherwise the webhook won't have permission to create an ACME challenge for this API group.
+            groupName: acme.yourdomain.tld
+            solverName: hosttech
+            config:
+              secretName: hosttech-secret
+              apiUrl: https://api.ns1.hosttech.eu/api/user/v1
+```
+
+### Credentials
+In order to access the hosttech API, the webhook needs an API token.
+
+If you choose another name for the secret than `hosttech-secret`, ensure you modify the value of `secretName` in the `[Cluster]Issuer`.
+
+The secret for the example above will look like this:
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hosttech-secret
+type: Opaque
+data:
+  token: your-base64-encoded-token
+```
+
+### Create a certificate
+
+Finally you are now able to create certificates, for example a wildcard certificate:
+
+```yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: example-cert
+  namespace: cert-manager
+spec:
+  commonName: example.com
+  dnsNames:
+    - "*.example.com"
+    - example.com
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
+  secretName: example-cert
+```
+
+## Development
 
 ### Running the test suite
 
@@ -46,13 +107,23 @@ else they will have undetermined behaviour when used with cert-manager.
 **It is essential that you configure and run the test suite when creating a
 DNS01 webhook.**
 
-An example Go test file has been provided in [main_test.go](https://github.com/cert-manager/webhook-example/blob/master/main_test.go).
+First, you need to have hosttech account with access to DNS control panel. You need to create API token and have a registered and verified DNS zone there.
+You also must encode your API token into base64 and put the hash into the `testdata/hosttech/hosttech-secret.yml` file.
 
-You can run the test suite with:
+You can then run the test suite with:
 
 ```bash
-$ TEST_ZONE_NAME=example.com. make test
+# First install necessary binaries (this is only required once)
+./scripts/fetch-test-binaries.sh
+# Then run the tests
+TEST_ZONE_NAME=example.com. make verify
 ```
 
-The example file has a number of areas you must fill in and replace with your
-own options in order for tests to pass.
+## Creating a new Helm package
+
+To compile and publish a new Helm chart version:
+```
+helm package deploy/cert-manager-webhook-hetzner
+git checkout gh-pages
+helm repo index . --url https://piccobbit.github.io/cert-manager-webhook-hosttech/
+```

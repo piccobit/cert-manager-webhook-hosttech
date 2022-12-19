@@ -14,8 +14,7 @@ Follow the [instructions](https://cert-manager.io/docs/installation/) using the 
 
 ```bash
 helm repo add piccobit https://piccobit.github.io/helm-charts
-# Replace the groupName value with your desired domain,
-# replace the image tag with 
+# Replace the groupName value with your desired domain.
 helm install --namespace cert-manager cert-manager-webhook-hosttech piccobit/cert-manager-webhook-hosttech --set groupName=acme.yourdomain.tld
 ```
 

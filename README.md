@@ -1,4 +1,4 @@
-# ACME webhook for hosttech DNS API
+# ACME webhook for the hosttech DNS API
 
 This solver can be used when you want to use the cert-manager with the [hosttech DNS API](https://api.ns1.hosttech.eu/api/documentation/).
 

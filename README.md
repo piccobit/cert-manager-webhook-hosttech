@@ -12,9 +12,9 @@ Follow the [instructions](https://cert-manager.io/docs/installation/) using the 
 
 #### Using public helm chart
 ```bash
-helm repo add cert-manager-webhook-hosttech https://piccobit.github.io/cert-manager-webhook-hosttech
+helm repo add piccobit https://piccobit.github.io/helm-charts
 # Replace the groupName value with your desired domain
-helm install --namespace cert-manager cert-manager-webhook-hosttech cert-manager-webhook-hosttech/cert-manager-webhook-hosttech --set groupName=acme.yourdomain.tld
+helm install --namespace cert-manager cert-manager-webhook-hosttech piccobit/cert-manager-webhook-hosttech --set groupName=acme.yourdomain.tld
 ```
 
 #### From local checkout

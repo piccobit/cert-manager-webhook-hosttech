@@ -1,5 +1,5 @@
 ---
-name: Docker Image CI
+name: Docker Image CI - Release Build
 
 on:
   push:

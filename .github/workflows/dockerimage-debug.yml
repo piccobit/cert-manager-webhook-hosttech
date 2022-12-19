@@ -1,5 +1,5 @@
 ---
-name: Docker Image CI - Prerelease Build
+name: Docker Image CI - Debug Build
 
 on:
   push:

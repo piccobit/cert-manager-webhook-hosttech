@@ -4,7 +4,7 @@ name: Docker Image CI - Prerelease Build
 on:
   push:
     tags:
-      - 'v*+debug'
+      - 'v*\+debug'
 
 jobs:
   docker:

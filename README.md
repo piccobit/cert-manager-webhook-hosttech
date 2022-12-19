@@ -123,7 +123,7 @@ TEST_ZONE_NAME=example.com. make verify
 
 To compile and publish a new Helm chart version:
 ```
-helm package deploy/cert-manager-webhook-hetzner
+helm package deploy/cert-manager-webhook-hosttech
 git checkout gh-pages
 helm repo index . --url https://piccobbit.github.io/cert-manager-webhook-hosttech/
 ```

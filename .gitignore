@@ -22,7 +22,6 @@ _test
 _test/
 .kind/
 kubebuilder/
-testdata/hosttech/
 
 # Go Workspaces
 go.work

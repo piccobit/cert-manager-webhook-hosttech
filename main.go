@@ -26,33 +26,6 @@ const (
 	GroupNameKey = "GROUP_NAME"
 )
 
-var (
-	logger logr.Logger
-)
-
-func main() {
-	// This will register our custom DNS provider with the webhook serving
-	// library, making it available as an API under the provided GroupName.
-	// You can register multiple DNS provider implementations with a single
-	// webhook, where the Name() method will be used to disambiguate between
-	// the different implementations.
-
-	klog.InitFlags(nil)
-
-	groupName := os.Getenv(GroupNameKey)
-	if len(groupName) == 0 {
-		panic(fmt.Errorf("environment variable '%s' with the group name is missing", GroupNameKey))
-	}
-
-	logger = klogr.New().WithName("cmw-hosttech")
-
-	cmd.RunWebhookServer(groupName,
-		&customDNSProviderSolver{},
-	)
-
-	klog.Flush()
-}
-
 // customDNSProviderSolver implements the provider-specific logic needed to
 // 'present' an ACME challenge TXT record for your own DNS provider.
 // To do so, it must implement the `github.com/cert-manage/cert-manager/pkg/acme/webhook.Solver`
@@ -63,6 +36,7 @@ type customDNSProviderSolver struct {
 	challengeRequest *acmeV1.ChallengeRequest
 	token            string
 	client *req.Client
+	logger *logr.Logger
 }
 
 // customDNSProviderConfig is a structure that is used to decode into when
@@ -89,6 +63,27 @@ type customDNSProviderConfig struct {
 	SecretName string `json:"secretName"`
 }
 
+func main() {
+	// This will register our custom DNS provider with the webhook serving
+	// library, making it available as an API under the provided GroupName.
+	// You can register multiple DNS provider implementations with a single
+	// webhook, where the Name() method will be used to disambiguate between
+	// the different implementations.
+
+	klog.InitFlags(nil)
+
+	groupName := os.Getenv(GroupNameKey)
+	if len(groupName) == 0 {
+		panic(fmt.Errorf("environment variable '%s' with the group name is missing", GroupNameKey))
+	}
+
+	cmd.RunWebhookServer(groupName,
+		&customDNSProviderSolver{},
+	)
+
+	klog.Flush()
+}
+
 // Name is used as the name for this DNS solver when referencing it on the ACME
 // Issuer resource.
 // This should be unique **within the group name**, i.e. you can have two
@@ -102,14 +97,14 @@ func (c *customDNSProviderSolver) Name() string {
 func (c *customDNSProviderSolver) getZone(crZone string) (*internal.Zone, error) {
 	zone := strings.TrimSuffix(crZone, ".")
 
-	logger.Info("Getting zone information from nameserver", "zone", zone)
+	c.logger.WithName("getZone").Info("Getting zone information from nameserver", "zone", zone)
 
 	var result internal.ZonesResponse
 	var errMsg interface{}
 
 	u := c.cfg.APIURL + "/zones"
 
-	logger.WithName("getZone").Info("apiURL", "u", u)
+	c.logger.WithName("getZone").Info("apiURL", "u", u)
 
 	resp, err := c.client.R().
 		SetBearerAuthToken(c.token).
@@ -131,7 +126,7 @@ func (c *customDNSProviderSolver) getZone(crZone string) (*internal.Zone, error)
 
 	zoneInfo := result.Data[0]
 
-	logger.Info("Got zone information from nameserver", "zoneInfo", zoneInfo)
+	c.logger.WithName("getZone").Info("Got zone information from nameserver", "zoneInfo", zoneInfo)
 
 	return &zoneInfo, nil
 }
@@ -172,11 +167,11 @@ func (c *customDNSProviderSolver) addRecord() error {
 		Comment: "Hosttech Solver",
 	}
 
-	logger.Info("Adding challenge to nameserver", "acmeDomain", acmeDomain, "challenge", challenge)
+	c.logger.WithName("addRecord").Info("Adding challenge to nameserver", "acmeDomain", acmeDomain, "challenge", challenge)
 
 	u := c.cfg.APIURL + "/zones/{zoneID}/records"
 
-	logger.WithName("addRecord").Info("apiURL", "u", u)
+	c.logger.WithName("addRecord").Info("apiURL", "u", u)
 
 	resp, err := c.client.R().
 		SetBearerAuthToken(c.token).
@@ -204,11 +199,11 @@ func (c *customDNSProviderSolver) getRecords(zoneID int) (*internal.TXTRecordsRe
 	var result internal.TXTRecordsResponse
 	var errMsg interface{}
 
-	logger.Info("Getting TXT records of the zone", "zoneID", zoneID)
+	c.logger.WithName("getRecords").Info("Getting TXT records of the zone", "zoneID", zoneID)
 
 	u := c.cfg.APIURL + "/zones/{zoneID}/records"
 
-	logger.WithName("getRecords").Info("apiURL", "u", u)
+	c.logger.WithName("getRecords").Info("apiURL", "u", u)
 
 	resp, err := c.client.R().
 		SetBearerAuthToken(c.token).
@@ -229,7 +224,7 @@ func (c *customDNSProviderSolver) getRecords(zoneID int) (*internal.TXTRecordsRe
 
 	_ = resp
 
-	logger.Info("Got the following records", "records", result)
+	c.logger.WithName("getRecords").Info("Got the following records", "records", result)
 
 	return &result, nil
 }
@@ -259,7 +254,7 @@ func (c *customDNSProviderSolver) deleteRecord() error {
 				"recordID": strconv.Itoa(record.ID),
 			}
 
-			logger.Info("Deleting TXT record on nameserver",
+			c.logger.WithName("deleteRecord").Info("Deleting TXT record on nameserver",
 				"zoneInfo.Name", zoneInfo.Name,
 				"record.Name", record.Name,
 				"record.Text", record.Text,
@@ -267,7 +262,7 @@ func (c *customDNSProviderSolver) deleteRecord() error {
 
 			u := c.cfg.APIURL + "/zones/{zoneID}/records/{recordID}"
 
-			logger.WithName("deleteRecord").Info("apiURL", "u", u)
+			c.logger.WithName("deleteRecord").Info("apiURL", "u", u)
 
 			resp, err := c.client.R().
 				SetBearerAuthToken(c.token).
@@ -298,13 +293,13 @@ func (c *customDNSProviderSolver) deleteRecord() error {
 func (c *customDNSProviderSolver) Present(cr *acmeV1.ChallengeRequest) error {
 	err := c.initialize(cr)
 	if err != nil {
-		logger.WithName("Preset").Error(err, "Presenting the challenge failed")
+		c.logger.WithName("Present").Error(err, "Presenting the challenge failed")
 		return err
 	}
 
 	err = c.addRecord()
 	if err != nil {
-		logger.WithName("Preset").Error(err, "Adding the record failed")
+		c.logger.WithName("Present").Error(err, "Adding the record failed")
 		return err
 	}
 
@@ -314,12 +309,21 @@ func (c *customDNSProviderSolver) Present(cr *acmeV1.ChallengeRequest) error {
 func (c *customDNSProviderSolver) initialize(cr *acmeV1.ChallengeRequest) error {
 	var err error
 
+	logger := klogr.New().WithName("cmw-hosttech")
+
+	c.logger = &logger
+
 	c.challengeRequest = cr
 
 	c.cfg, err = loadConfig(cr.Config)
 	if err != nil {
 		return err
 	}
+
+	c.logger.WithName("loadConfig").Info("Config loaded",
+		"APIURL", c.cfg.APIURL,
+		"SecretName", c.cfg.SecretName,
+	)
 
 	secret, err := c.clientset.CoreV1().Secrets(cr.ResourceNamespace).Get(context.Background(), c.cfg.SecretName, metav1.GetOptions{})
 	if err != nil {
@@ -338,7 +342,7 @@ func (c *customDNSProviderSolver) initialize(cr *acmeV1.ChallengeRequest) error 
 
 	visToken := c.token[:10] + "..." + c.token[len(c.token)-10:]
 
-	logger.WithName("initialize").Info("Secret", "c.token", visToken)
+	c.logger.WithName("initialize").Info("Secret", "c.token", visToken)
 
 	return nil
 }
@@ -352,13 +356,13 @@ func (c *customDNSProviderSolver) initialize(cr *acmeV1.ChallengeRequest) error 
 func (c *customDNSProviderSolver) CleanUp(cr *acmeV1.ChallengeRequest) error {
 	err := c.initialize(cr)
 	if err != nil {
-		logger.WithName("Cleanup").Error(err, "Initialization failed")
+		c.logger.WithName("Cleanup").Error(err, "Initialization failed")
 		return err
 	}
 
 	err = c.deleteRecord()
 	if err != nil {
-		logger.WithName("Cleanup").Error(err, "Deleting the record failed")
+		c.logger.WithName("Cleanup").Error(err, "Deleting the record failed")
 		return err
 	}
 
@@ -377,7 +381,7 @@ func (c *customDNSProviderSolver) CleanUp(cr *acmeV1.ChallengeRequest) error {
 func (c *customDNSProviderSolver) Initialize(kubeClientConfig *rest.Config, stopCh <-chan struct{}) error {
 	cl, err := kubernetes.NewForConfig(kubeClientConfig)
 	if err != nil {
-		logger.WithName("Initialize").Error(err, "Initialization failed")
+		c.logger.WithName("Initialize").Error(err, "Initialization failed")
 		return err
 	}
 
@@ -398,11 +402,6 @@ func loadConfig(cfgJSON *extapi.JSON) (*customDNSProviderConfig, error) {
 	if err := json.Unmarshal(cfgJSON.Raw, &cfg); err != nil {
 		return nil, fmt.Errorf("error decoding solver config: %v", err)
 	}
-
-	logger.WithName("loadConfig").Info("Config loaded",
-		"APIURL", cfg.APIURL,
-		"SecretName", cfg.SecretName,
-	)
 
 	return &cfg, nil
 }

@@ -3,12 +3,22 @@ name: Docker Image CI - Release Build
 
 on:
   push:
-    tags:
-      - 'v*'
-      - '!v*-debug'
+    branches:
+      - main
 
 jobs:
+  semantic_version:
+    -
+      name: Create automagically a new semantic version
+      uses: paulhatch/semantic-version@v4.0.2
+      with:
+        tag_prefix: "v"
+        major_pattern: "[MAJOR]"
+        minor_pattern: "[MINOR]"
+        format: "${major}.${minor}.${patch}-rc${increment}"
+
   docker:
+    if: "contains(github.event.head_commit.message, '[RELEASE]')"
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -28,14 +38,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Create automagically a new semantic version
-        uses: paulhatch/semantic-version@v4.0.2
-        with:
-          tag_prefix: "v"
-          major_pattern: "(MAJOR)"
-          minor_pattern: "(MINOR)"
-          format: "${major}.${minor}.${patch}-rc${increment}"
-      -
         name: Build and push
         uses: docker/build-push-action@v3
         with:
@@ -43,4 +45,4 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64
           push: true
-          tags: piccobit/cert-manager-webhook-hosttech:${{  github.ref_name }}
+          tags: piccobit/cert-manager-webhook-hosttech:${{ github.ref_name }}

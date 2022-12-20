@@ -20,7 +20,7 @@ jobs:
           format: "${major}.${minor}.${patch}-rc${increment}"
 
   docker:
-    if: "contains(github.event.head_commit.message, '[RELEASE]')"
+    if: ${{ (contains(github.event.head_commit.message, '[MAJOR]')) || ((contains(github.event.head_commit.message, '[MINOR]'))) }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout

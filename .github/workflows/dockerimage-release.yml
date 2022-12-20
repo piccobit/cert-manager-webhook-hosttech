@@ -11,6 +11,11 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       -
+        name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      -
         name: Create automagically a new semantic version
         uses: paulhatch/semantic-version@v4.0.2
         with:
@@ -23,10 +28,6 @@ jobs:
     if: ${{ (contains(github.event.head_commit.message, '[MAJOR]')) || ((contains(github.event.head_commit.message, '[MINOR]'))) }}
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v2

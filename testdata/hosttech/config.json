@@ -1,4 +1,4 @@
 {
-  "apiURL": "https://api.ns1.hosttech.eu",
+  "apiURL": "https://api.ns1.hosttech.eu/api/user/v1",
   "secretName": "hosttech-secret"
 }

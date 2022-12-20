@@ -8,14 +8,15 @@ on:
 
 jobs:
   semantic_version:
-    -
-      name: Create automagically a new semantic version
-      uses: paulhatch/semantic-version@v4.0.2
-      with:
-        tag_prefix: "v"
-        major_pattern: "[MAJOR]"
-        minor_pattern: "[MINOR]"
-        format: "${major}.${minor}.${patch}-rc${increment}"
+    steps:
+      -
+        name: Create automagically a new semantic version
+        uses: paulhatch/semantic-version@v4.0.2
+        with:
+          tag_prefix: "v"
+          major_pattern: "[MAJOR]"
+          minor_pattern: "[MINOR]"
+          format: "${major}.${minor}.${patch}-rc${increment}"
 
   docker:
     if: "contains(github.event.head_commit.message, '[RELEASE]')"

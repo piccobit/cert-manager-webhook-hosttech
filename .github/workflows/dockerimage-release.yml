@@ -1,5 +1,5 @@
 ---
-name: Docker Image CI - Release Build
+name: Docker Image CI Build
 
 on:
   push:
@@ -7,29 +7,7 @@ on:
       - main
 
 jobs:
-  semantic_version:
-    runs-on: ubuntu-22.04
-    outputs:
-      version: ${{ steps.semantic_version.outputs.version }}
-      version_tag: ${{ steps.semantic_version.outputs.version_tag }}
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      -
-        name: Create automagically a new semantic version
-        uses: paulhatch/semantic-version@v5.0.0-beta2
-        id: semantic_version
-        with:
-          tag_prefix: "v"
-          major_pattern: "[MAJOR]"
-          minor_pattern: "[MINOR]"
-          version_format: "${major}.${minor}.${patch}-rc${increment}"
-
   docker:
-    needs: semantic_version
     if: ${{ (contains(github.event.head_commit.message, '[PRERELEASE]')) || ((contains(github.event.head_commit.message, '[RELEASE]'))) }}
     runs-on: ubuntu-22.04
     steps:
@@ -51,6 +29,27 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
+        name: Create automagically a new semantic version
+        uses: paulhatch/semantic-version@v5.0.0-beta2
+        id: semantic_version
+        with:
+          tag_prefix: "v"
+          major_pattern: "[MAJOR]"
+          minor_pattern: "[MINOR]"
+          version_format: "${major}.${minor}.${patch}-rc${increment}"
+      -
+        name: Create prerelease tag
+        if: ${{ (contains(github.event.head_commit.message, '[PRERELEASE]')) }}
+        uses: rickstaa/action-create-tag@v1
+        with:
+          tag: ${{ steps.semantic_version.outputs.version }}
+      -
+        name: Create release tag
+        if: ${{ (contains(github.event.head_commit.message, '[RELEASE]')) }}
+        uses: rickstaa/action-create-tag@v1
+        with:
+          tag: ${{ steps.semantic_version.outputs.version_tag }}
+      -
         name: Build and push
         uses: docker/build-push-action@v3
         with:
@@ -58,26 +57,4 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64
           push: true
-          tags: piccobit/cert-manager-webhook-hosttech:${{ needs.semantic_version.outputs.version }}
-
-  prerelease_tag:
-    needs: docker
-    if: ${{ (contains(github.event.head_commit.message, '[PRERELEASE]')) }}
-    runs-on: ubuntu-22.04
-    steps:
-      -
-        name: Create tag
-        uses: rickstaa/action-create-tag@v1
-        with:
-          tag: ${{ needs.semantic_version.outputs.version }}
-
-  release_tag:
-    needs: docker
-    if: ${{ (contains(github.event.head_commit.message, '[RELEASE]')) }}
-    runs-on: ubuntu-22.04
-    steps:
-      -
-        name: Create tag
-        uses: rickstaa/action-create-tag@v1
-        with:
-          tag: ${{ needs.semantic_version.outputs.version_tag }}
+          tags: piccobit/cert-manager-webhook-hosttech:${{ github.ref_name }}

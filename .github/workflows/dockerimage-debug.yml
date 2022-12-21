@@ -36,7 +36,7 @@ jobs:
           tag_prefix: "v"
           major_pattern: "[MAJOR]"
           minor_pattern: "[MINOR]"
-          version_format: "${major}.${minor}.${patch}-dbg{increment}"
+          version_format: "${major}.${minor}.${patch}-dbg${increment}"
       -
         name: Create tag
         uses: rickstaa/action-create-tag@v1

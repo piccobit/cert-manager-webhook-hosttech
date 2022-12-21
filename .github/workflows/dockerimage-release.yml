@@ -38,23 +38,18 @@ jobs:
           minor_pattern: "[MINOR]"
           version_format: "${major}.${minor}.${patch}-rc${increment}"
       -
-        name: Create prerelease tag
-        if: ${{ (contains(github.event.head_commit.message, '[PRERELEASE]')) }}
+        name: Create tag
+        if: (contains(github.event.head_commit.message, '[MAJOR]')) || (contains(github.event.head_commit.message, '[MINOR]'))
         uses: rickstaa/action-create-tag@v1
         with:
           tag: ${{ steps.semantic_version.outputs.version }}
       -
-        name: Create release tag
-        if: ${{ (contains(github.event.head_commit.message, '[RELEASE]')) }}
-        uses: rickstaa/action-create-tag@v1
-        with:
-          tag: ${{ steps.semantic_version.outputs.version_tag }}
-      -
-        name: Build and push
+        name: Build and push prerelease
+        if: (contains(github.event.head_commit.message, '[MAJOR]')) || (contains(github.event.head_commit.message, '[MINOR]'))
         uses: docker/build-push-action@v3
         with:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64
           push: true
-          tags: piccobit/cert-manager-webhook-hosttech:${{ github.ref_name }}
+          tags: piccobit/cert-manager-webhook-hosttech:${{ steps.semantic_version.outputs.version }}

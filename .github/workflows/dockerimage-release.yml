@@ -57,4 +57,4 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64
           push: true
-          tags: piccobit/cert-manager-webhook-hosttech:${{ ${{needs.semantic_version.outputs.version_tag}} }}
+          tags: piccobit/cert-manager-webhook-hosttech:${{ needs.semantic_version.outputs.version_tag }}

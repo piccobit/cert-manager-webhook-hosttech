@@ -62,7 +62,7 @@ jobs:
           tag: ${{ steps.semantic_version.outputs.version }}
       -
         name: Create tag for releases
-        if: contains(github.event.head_commit.message, '[PRERELEASE]') || contains(github.event.head_commit.message, '[DEBUG]')
+        if: contains(github.event.head_commit.message, '[RELEASE]')
         uses: rickstaa/action-create-tag@v1
         with:
           tag: ${{ steps.semantic_version.outputs.version_tag }}
@@ -75,7 +75,7 @@ jobs:
           file: ./Dockerfile.debug
           platforms: linux/amd64
           push: true
-          tags: piccobit/cert-manager-webhook-hosttech:${{ steps.semantic_version.outputs.version }}
+          tags: piccobit/cert-manager-webhook-hosttech:${{ steps.semantic_version_debug.outputs.version }}
       -
         name: Build and push pre-release
         if: contains(github.event.head_commit.message, '[PRERELEASE]')

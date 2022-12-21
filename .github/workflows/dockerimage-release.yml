@@ -57,4 +57,4 @@ jobs:
         name: Create tag
         uses: rickstaa/action-create-tag@v1
         with:
-          tag: ${{ steps.semantic_version.outputs.version }}
+          tag: ${{ needs.semantic_version.outputs.version }}

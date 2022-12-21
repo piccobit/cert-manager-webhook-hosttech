@@ -3,11 +3,12 @@ name: Docker Image CI - Debug Build
 
 on:
   push:
-    tags:
-      - 'v*-debug'
+    branches:
+      - main
 
 jobs:
   docker:
+    if: contains(github.event.head_commit.message, '[DEBUG]')
     runs-on: ubuntu-22.04
     steps:
       -
@@ -28,11 +29,25 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Build and push
+        name: Create automagically a new semantic version
+        uses: paulhatch/semantic-version@v5.0.0-beta2
+        id: semantic_version
+        with:
+          tag_prefix: "v"
+          major_pattern: "[MAJOR]"
+          minor_pattern: "[MINOR]"
+          version_format: "${major}.${minor}.${patch}-dbg{increment}"
+      -
+        name: Create tag
+        uses: rickstaa/action-create-tag@v1
+        with:
+          tag: ${{ steps.semantic_version.outputs.version }}
+      -
+        name: Build and push debug release
         uses: docker/build-push-action@v3
         with:
           context: .
           file: ./Dockerfile.debug
           platforms: linux/amd64
           push: true
-          tags: piccobit/cert-manager-webhook-hosttech:${{  github.ref_name }}
+          tags: piccobit/cert-manager-webhook-hosttech:${{ steps.semantic_version.outputs.version }}

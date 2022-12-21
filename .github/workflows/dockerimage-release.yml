@@ -8,7 +8,7 @@ on:
 
 jobs:
   docker:
-    if: (contains(github.event.head_commit.message, '[MAJOR]')) || (contains(github.event.head_commit.message, '[MINOR]'))
+    if: (contains(github.event.head_commit.message, '[RELEASE]')) || (contains(github.event.head_commit.message, '[PRERELEASE]'))
     runs-on: ubuntu-22.04
     steps:
       -
@@ -44,6 +44,7 @@ jobs:
           tag: ${{ steps.semantic_version.outputs.version }}
       -
         name: Build and push prerelease
+        if:  contains(github.event.head_commit.message, '[PRERELEASE]')
         uses: docker/build-push-action@v3
         with:
           context: .
@@ -51,3 +52,13 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: piccobit/cert-manager-webhook-hosttech:${{ steps.semantic_version.outputs.version }}
+      -
+        name: Build and push release
+        if: contains(github.event.head_commit.message, '[RELEASE]')
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: piccobit/cert-manager-webhook-hosttech:${{ steps.semantic_version.outputs.version_tag }}

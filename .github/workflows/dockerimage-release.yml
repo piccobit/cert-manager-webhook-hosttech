@@ -60,6 +60,7 @@ jobs:
     if: ${{ (contains(github.event.head_commit.message, '[PRERELEASE]')) }}
     runs-on: ubuntu-22.04
     steps:
+      -
         name: Create tag
         uses: rickstaa/action-create-tag@v1
         with:
@@ -70,7 +71,8 @@ jobs:
     if: ${{ (contains(github.event.head_commit.message, '[RELEASE]')) }}
     runs-on: ubuntu-22.04
     steps:
-      name: Create tag
-      uses: rickstaa/action-create-tag@v1
-      with:
-        tag: ${{ needs.semantic_version.outputs.version_tag }}
+      -
+        name: Create tag
+        uses: rickstaa/action-create-tag@v1
+        with:
+          tag: ${{ needs.semantic_version.outputs.version_tag }}

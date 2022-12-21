@@ -293,7 +293,7 @@ func (c *customDNSProviderSolver) deleteRecord() error {
 func (c *customDNSProviderSolver) Present(cr *acmeV1.ChallengeRequest) error {
 	err := c.initialize(cr)
 	if err != nil {
-		c.logger.WithName("Present").Error(err, "Presenting the challenge failed")
+		c.logger.WithName("Present").Error(err, "Initialization failed")
 		return err
 	}
 
@@ -308,10 +308,6 @@ func (c *customDNSProviderSolver) Present(cr *acmeV1.ChallengeRequest) error {
 
 func (c *customDNSProviderSolver) initialize(cr *acmeV1.ChallengeRequest) error {
 	var err error
-
-	logger := klogr.New().WithName("cmw-hosttech")
-
-	c.logger = &logger
 
 	c.challengeRequest = cr
 
@@ -379,6 +375,10 @@ func (c *customDNSProviderSolver) CleanUp(cr *acmeV1.ChallengeRequest) error {
 // The stopCh can be used to handle early termination of the webhook, in cases
 // where a SIGTERM or similar signal is sent to the webhook process.
 func (c *customDNSProviderSolver) Initialize(kubeClientConfig *rest.Config, stopCh <-chan struct{}) error {
+	logger := klogr.New().WithName("cmw-hosttech")
+
+	c.logger = &logger
+
 	cl, err := kubernetes.NewForConfig(kubeClientConfig)
 	if err != nil {
 		c.logger.WithName("Initialize").Error(err, "Initialization failed")

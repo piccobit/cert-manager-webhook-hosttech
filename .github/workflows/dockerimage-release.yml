@@ -10,7 +10,7 @@ jobs:
   semantic_version:
     runs-on: ubuntu-22.04
     outputs:
-      version_tag: ${{ steps.semantic_version.outputs.version_tag }}
+      version: ${{ steps.semantic_version.outputs.version }}
     steps:
       -
         name: Checkout
@@ -25,12 +25,7 @@ jobs:
           tag_prefix: "v"
           major_pattern: "[MAJOR]"
           minor_pattern: "[MINOR]"
-          version_format: "${major}.${minor}.${patch}+${increment}"
-      -
-        name: Create tag
-        uses: rickstaa/action-create-tag@v1
-        with:
-          tag: ${{ steps.semantic_version.outputs.version }}
+          version_format: "${major}.${minor}.${patch}-rc${increment}"
 
   docker:
     needs: semantic_version
@@ -57,4 +52,9 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64
           push: true
-          tags: piccobit/cert-manager-webhook-hosttech:${{ needs.semantic_version.outputs.version_tag }}
+          tags: piccobit/cert-manager-webhook-hosttech:${{ needs.semantic_version.outputs.version }}
+      -
+        name: Create tag
+        uses: rickstaa/action-create-tag@v1
+        with:
+          tag: ${{ steps.semantic_version.outputs.version }}

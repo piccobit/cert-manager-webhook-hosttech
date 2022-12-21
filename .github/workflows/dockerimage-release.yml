@@ -8,7 +8,7 @@ on:
 
 jobs:
   docker:
-    if: ${{ (contains(github.event.head_commit.message, '[PRERELEASE]')) || ((contains(github.event.head_commit.message, '[RELEASE]'))) }}
+    if: (contains(github.event.head_commit.message, '[MAJOR]')) || (contains(github.event.head_commit.message, '[MINOR]'))
     runs-on: ubuntu-22.04
     steps:
       -
@@ -39,13 +39,11 @@ jobs:
           version_format: "${major}.${minor}.${patch}-rc${increment}"
       -
         name: Create tag
-        if: (contains(github.event.head_commit.message, '[MAJOR]')) || (contains(github.event.head_commit.message, '[MINOR]'))
         uses: rickstaa/action-create-tag@v1
         with:
           tag: ${{ steps.semantic_version.outputs.version }}
       -
         name: Build and push prerelease
-        if: (contains(github.event.head_commit.message, '[MAJOR]')) || (contains(github.event.head_commit.message, '[MINOR]'))
         uses: docker/build-push-action@v3
         with:
           context: .

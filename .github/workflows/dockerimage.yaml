@@ -42,15 +42,21 @@ jobs:
         name: Create automagically a new semantic version for the debug pre-releases
         if: contains(github.event.head_commit.message, '[DEBUG]')
         uses: paulhatch/semantic-version@v5.0.0-beta2
-        id: semantic_version
+        id: semantic_version_debug
         with:
           tag_prefix: "v"
           major_pattern: "[MAJOR]"
           minor_pattern: "[MINOR]"
           version_format: "${major}.${minor}.${patch}-dbg${increment}"
       -
+        name: Create tag for debug pre-releases
+        if: contains(github.event.head_commit.message, '[DEBUG]')
+        uses: rickstaa/action-create-tag@v1
+        with:
+          tag: ${{ steps.semantic_version_debug.outputs.version }}
+      -
         name: Create tag for pre-releases
-        if: contains(github.event.head_commit.message, '[PRERELEASE]') || contains(github.event.head_commit.message, '[DEBUG]')
+        if: contains(github.event.head_commit.message, '[PRERELEASE]')
         uses: rickstaa/action-create-tag@v1
         with:
           tag: ${{ steps.semantic_version.outputs.version }}

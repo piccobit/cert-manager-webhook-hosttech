@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-22.04
     outputs:
       version: ${{ steps.semantic_version.outputs.version }}
+      version_tag: ${{ steps.semantic_version.outputs.version_tag }}
     steps:
       -
         name: Checkout
@@ -29,7 +30,7 @@ jobs:
 
   docker:
     needs: semantic_version
-    if: ${{ (contains(github.event.head_commit.message, '[MAJOR]')) || ((contains(github.event.head_commit.message, '[MINOR]'))) }}
+    if: ${{ (contains(github.event.head_commit.message, '[PRERELEASE]')) || ((contains(github.event.head_commit.message, '[RELEASE]'))) }}
     runs-on: ubuntu-22.04
     steps:
       -
@@ -53,8 +54,23 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: piccobit/cert-manager-webhook-hosttech:${{ needs.semantic_version.outputs.version }}
-      -
+
+  prerelease_tag:
+    needs: docker
+    if: ${{ (contains(github.event.head_commit.message, '[PRERELEASE]')) }}
+    runs-on: ubuntu-22.04
+    steps:
         name: Create tag
         uses: rickstaa/action-create-tag@v1
         with:
           tag: ${{ needs.semantic_version.outputs.version }}
+
+  release_tag:
+    needs: docker
+    if: ${{ (contains(github.event.head_commit.message, '[RELEASE]')) }}
+    runs-on: ubuntu-22.04
+    steps:
+      name: Create tag
+      uses: rickstaa/action-create-tag@v1
+      with:
+        tag: ${{ needs.semantic_version.outputs.version_tag }}

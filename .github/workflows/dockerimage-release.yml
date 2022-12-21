@@ -25,7 +25,7 @@ jobs:
           tag_prefix: "v"
           major_pattern: "[MAJOR]"
           minor_pattern: "[MINOR]"
-          # format: "${major}.${minor}.${patch}-rc${increment}"
+          format: "${major}.${minor}.${patch}-rc${increment}"
       -
         name: Create tag
         uses: rickstaa/action-create-tag@v1

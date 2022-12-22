@@ -2,6 +2,7 @@
 
 <!-- vim-markdown-toc GFM -->
 
+* [Introduction](#introduction)
 * [Installation](#installation)
     * [cert-manager](#cert-manager)
     * [Webhook](#webhook)
@@ -15,9 +16,11 @@
 * [Development](#development)
     * [Building the webhook Docker image](#building-the-webhook-docker-image)
     * [Running the test suite](#running-the-test-suite)
-* [Non-Affiliation & Disclaimer](#non-affiliation--disclaimer)
+* [Non-Affiliation](#non-affiliation)
 
 <!-- vim-markdown-toc -->
+
+## Introduction
 
 This solver can be used when you want to use the **cert-manager** with the [hosttech DNS API](https://api.ns1.hosttech.eu/api/documentation/).
 
@@ -82,6 +85,7 @@ spec:
 ```
 
 ### Credentials
+
 In order to access the hosttech API, the webhook needs an API token.
 
 If you choose another name for the secret than `hosttech-secret`, ensure to modify the value of `secretName` in the `Issuer` or  `ClusterIssuer`.
@@ -198,6 +202,6 @@ You can then run the test suite with:
 TEST_ZONE_NAME=example.com. make verify
 ```
 
-## Non-Affiliation & Disclaimer
+## Non-Affiliation
 
-We are not affiliated, associated, authorized, endorsed by, or in any way officially connected with hostech GmbH, or any of its subsidiaries or its affiliates. 
+We, the authors of this software, are not affiliated, associated, authorized, endorsed by, or in any way officially connected with hostech GmbH, or any of its subsidiaries or its affiliates. 

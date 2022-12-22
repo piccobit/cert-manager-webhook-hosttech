@@ -176,6 +176,8 @@ To forward the debug connection to the webhook pod in your Kubernetes cluster us
 kubectl port-forward -n cert-manager $(kubectl get pods -n cert-manager | grep hosttech | cut -d ' ' -f 1) 40000:40000
 ```
 
+**Note:** The version tags for the Docker images are generated automatically and shouldn't be configured manually.
+
 ### Running the test suite
 
 All DNS providers **must** run the DNS01 provider conformance testing suite,

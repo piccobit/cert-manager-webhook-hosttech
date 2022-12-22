@@ -2,7 +2,7 @@ OS ?= $(shell go env GOOS)
 ARCH ?= $(shell go env GOARCH)
 
 IMAGE_NAME := "cert-manager-webhook-hosttech"
-IMAGE_TAG := "0.1.0"
+IMAGE_TAG := "latest"
 
 OUT := $(shell pwd)/_out
 

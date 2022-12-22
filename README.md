@@ -1,5 +1,24 @@
 # ACME webhook for the hosttech DNS API
 
+<!-- vim-markdown-toc GFM -->
+
+* [Installation](#installation)
+    * [cert-manager](#cert-manager)
+    * [Webhook](#webhook)
+        * [Using the public Helm chart](#using-the-public-helm-chart)
+        * [From a local checkout](#from-a-local-checkout)
+* [Issuer / ClusterIssuer](#issuer--clusterissuer)
+    * [Credentials](#credentials)
+    * [Create a certificate](#create-a-certificate)
+        * [Using a certificate request](#using-a-certificate-request)
+        * [Using a Kubernetes Ingress](#using-a-kubernetes-ingress)
+* [Development](#development)
+    * [Building the webhook Docker image](#building-the-webhook-docker-image)
+    * [Running the test suite](#running-the-test-suite)
+* [Non-Affiliation & Disclaimer](#non-affiliation--disclaimer)
+
+<!-- vim-markdown-toc -->
+
 This solver can be used when you want to use the **cert-manager** with the [hosttech DNS API](https://api.ns1.hosttech.eu/api/documentation/).
 
 ## Installation
@@ -21,7 +40,8 @@ helm install --namespace cert-manager cert-manager-webhook-hosttech piccobit/cer
 #### From a local checkout
 
 ```bash
-helm install --namespace cert-manager cert-manager-webhook-hosttech .
+# Replace the groupName value with your desired domain.
+helm install --namespace cert-manager cert-manager-webhook-hosttech  --set groupName=acme.yourdomain.tld .
 ```
 **Note**: The Kubernetes resources used to install the webhook should be deployed within the same namespace as the **cert-manager**.
 
@@ -72,12 +92,15 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: hosttech-secret
+  namespace: cert-manager
 type: Opaque
 data:
-  token: your-base64-encoded-token
+  token: <your-base64-encoded-token>
 ```
 
 ### Create a certificate
+
+#### Using a certificate request
 
 Finally you are now able to create certificates, for example a wildcard certificate:
 
@@ -98,7 +121,60 @@ spec:
   secretName: example-cert
 ```
 
+#### Using a Kubernetes Ingress
+
+```yaml
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: www
+  annotations:
+    kubernetes.io/ingress.class: <nginx|traefik>
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+  - secretName: wildcard-example-com-tls
+    hosts:
+    - "*.example.com"
+    - "example.com"
+  rules:
+  - host: www.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: www
+            port:
+              number: 8080
+...
+```
+
 ## Development
+
+### Building the webhook Docker image
+
+Building of the Docker image with the webhook can be done either manually by using the provided `Makefile` or automatically by using
+the GitHub Action workflows.
+
+The following keywords in the commit message are triggering the build of debug, pre-release or release Docker image:
+
+| Keyword        | Action                                            |
+| :------------- | :------------------------------------------------ |
+| `[RELEASE]`    | Triggers the build of a release Docker image.     |
+| `[PRERELEASE]` | Triggers the build of a pre-release Docker image. |
+| `[DEBUG]`      | Triggers the build of a debug Docker image.       |
+
+The debug Docker images contains beside the webhook application also the **Delve** debugger. Deploying the Helm chart with the option `debug.enabled=true` will start the **Delve** debugger to listen on the configured port (default: 40000) and waiting for a debug connection from your IDE.
+
+To forward the debug connection to the webhook pod in your Kubernetes cluster use the following command:
+
+```bash
+# Using the default debug port 40000
+kubectl port-forward -n cert-manager $(kubectl get pods -n cert-manager | grep hosttech | cut -d ' ' -f 1) 40000:40000
+```
 
 ### Running the test suite
 
@@ -119,3 +195,7 @@ You can then run the test suite with:
 # Then run the tests
 TEST_ZONE_NAME=example.com. make verify
 ```
+
+## Non-Affiliation & Disclaimer
+
+We are not affiliated, associated, authorized, endorsed by, or in any way officially connected with hostech GmbH, or any of its subsidiaries or its affiliates. 

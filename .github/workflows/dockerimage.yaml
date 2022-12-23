@@ -32,7 +32,7 @@ jobs:
         name: Create automagically a new semantic version for every normal commit
         if: (!contains(github.event.head_commit.message, '[DEBUG]') && !contains(github.event.head_commit.message, '[PRERELEASE]') && !contains(github.event.head_commit.message, '[RELEASE]'))
         uses: paulhatch/semantic-version@v5.0.0-beta2
-        id: semantic_version_release
+        id: semantic_version
         with:
           tag_prefix: "v"
           major_pattern: "[MAJOR]"

@@ -4,7 +4,7 @@ name: Docker Image CI Build
 defaults:
   run:
     shell: bash
-    working-directories: ./github/scripts
+    working-directory: ./github/scripts
 
 on:
   push:

@@ -30,7 +30,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Create automagically a new semantic version for every normal commit
-        if: !contains(github.event.head_commit.message, '[DEBUG]') && !contains(github.event.head_commit.message, '[PRERELEASE]') && !contains(github.event.head_commit.message, '[RELEASE]')
+        if: (!contains(github.event.head_commit.message, '[DEBUG]') && !contains(github.event.head_commit.message, '[PRERELEASE]') && !contains(github.event.head_commit.message, '[RELEASE]'))
         uses: paulhatch/semantic-version@v5.0.0-beta2
         id: semantic_version_release
         with:
@@ -70,7 +70,7 @@ jobs:
           version_format: "${major}.${minor}.${patch}-dbg${increment}"
       -
         name: Create tag for every normal commit
-        if: !contains(github.event.head_commit.message, '[DEBUG]') && !contains(github.event.head_commit.message, '[PRERELEASE]') && !contains(github.event.head_commit.message, '[RELEASE]')
+        if: (!contains(github.event.head_commit.message, '[DEBUG]') && !contains(github.event.head_commit.message, '[PRERELEASE]') && !contains(github.event.head_commit.message, '[RELEASE]'))
         uses: rickstaa/action-create-tag@v1
         with:
           tag: ${{ steps.semantic_version_debug.outputs.version }}

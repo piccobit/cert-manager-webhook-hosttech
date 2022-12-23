@@ -182,14 +182,14 @@ kubectl port-forward -n cert-manager $(kubectl get pods -n cert-manager | grep h
 
 **Note:** The version tags for the Docker images are generated automatically by using the following keywords in the commit message and shouldn't be configured manually:
 
-| Keyword        | Action                                  |
-| :------------- | :-------------------------------------- |
-| `[PREPATCH]`   | Bump version to next pre-patch version. |
-| `[PATCH]`      | Bump version to next patch version.     |
-| `[PREMINOR]`   | Bump version to next pre-minor version. |
-| `[MINOR]`      | Bump version to next minor version.     |
-| `[PREMAJOR]`   | Bump version to next pre-major version. |
-| `[MAJOR]`      | Bump version to next major version.     |
+| Keyword        | Version Increment   | `[PRELEASE]`     | `[DEBUG]`         | `[RELEASE]` |
+| :------------- | :------------------ | :--------------- | :---------------- | :---------- |
+| `[PREPATCH]`   | Bump patch version. | Use 'rc' prefix. | Use 'dbg' prefix. | --          |
+| `[PATCH]`      | Bump patch version. |                  |                   | --          |
+| `[PREMINOR]`   | Bump minor version. | Use 'rc' prefix. | Use 'dbg' prefix. | --          |
+| `[MINOR]`      | Bump minor version. |                  |                   | --          |
+| `[PREMAJOR]`   | Bump major version. | Use 'rc' prefix. | Use 'dbg' prefix. | --          |
+| `[MAJOR]`      | Bump major version. |                  |                   | --          |
 
 ### Running the test suite
 

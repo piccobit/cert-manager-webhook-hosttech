@@ -41,7 +41,7 @@ jobs:
         name: Calculate new semantic pre-release version
         if: contains(github.event.head_commit.message, '[PRERELEASE]')
         uses: zwaldowski/semver-release-action@v3
-        id: semantic_version_prelease
+        id: semantic_version_prerelease
         with:
           bump: preminor
           preid: rc

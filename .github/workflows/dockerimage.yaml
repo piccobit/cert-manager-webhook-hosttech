@@ -23,7 +23,7 @@ jobs:
         name: Create tag for every normal commit
         uses: rickstaa/action-create-tag@v1
         with:
-          tag: ${{ steps.semantic_version_debug.outputs.version }}
+          tag: ${{ steps.semantic_version.outputs.version }}
 
   docker:
     needs: semantic_version

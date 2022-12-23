@@ -8,6 +8,7 @@ on:
 
 jobs:
   semantic_version:
+    runs-on: ubuntu-22.04
     steps:
       -
         name: Create automagically a new semantic version for every normal commit

@@ -180,7 +180,16 @@ To forward the debug connection to the webhook pod in your Kubernetes cluster us
 kubectl port-forward -n cert-manager $(kubectl get pods -n cert-manager | grep hosttech | cut -d ' ' -f 1) 40000:40000
 ```
 
-**Note:** The version tags for the Docker images are generated automatically and shouldn't be configured manually.
+**Note:** The version tags for the Docker images are generated automatically by using the following keywords in the commit message and shouldn't be configured manually:
+
+| Keyword        | Action                                  |
+| :------------- | :-------------------------------------- |
+| `[PREPATCH]`   | Bump version to next pre-patch version. |
+| `[PATCH]`      | Bump version to next patch version.     |
+| `[PREMINOR]`   | Bump version to next pre-minor version. |
+| `[MINOR]`      | Bump version to next minor version.     |
+| `[PREMAJOR]`   | Bump version to next pre-major version. |
+| `[MAJOR]`      | Bump version to next major version.     |
 
 ### Running the test suite
 

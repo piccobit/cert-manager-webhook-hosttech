@@ -34,7 +34,7 @@ jobs:
         uses: zwaldowski/semver-release-action@v3
         id: semantic_version_debug
         with:
-          bump: preminor
+          bump: prepatch
           preid: dbg
           github_token: ${{ secrets.GITHUB_TOKEN }}
       -

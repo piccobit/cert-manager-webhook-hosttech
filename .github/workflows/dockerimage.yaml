@@ -1,6 +1,11 @@
 ---
 name: Docker Image CI Build
 
+defaults:
+  run:
+    shell: bash
+    working-directors: ./github/scripts
+
 on:
   push:
     branches:
@@ -29,50 +34,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
-        name: Calculate new semantic pre-patch version
-        if: contains(github.event.head_commit.message, '[PREPATCH]')
-        uses: zwaldowski/semver-release-action@v3
-        id: semantic_version_pre_patch
-        with:
-          bump: prepatch
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+        name: Get semver options from HEAD commit
+        id: semver_options
+        run: get-semver-options.sh >> $GITHUB_OUTPUT
       -
-        name: Calculate new semantic patch version
-        if: contains(github.event.head_commit.message, '[PATCH]')
+        name: Generate new semantic version tag
+        if: contains(github.event.head_commit.message, '[RELEASE]') || contains(github.event.head_commit.message, '[PRERELEASE]') || contains(github.event.head_commit.message, '[DEBUG]')
+        id: semantic_version
         uses: zwaldowski/semver-release-action@v3
-        id: semantic_version_patch
         with:
-          bump: patch
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-      -
-        name: Calculate new semantic pre-minor version
-        if: contains(github.event.head_commit.message, '[PREMINOR]')
-        uses: zwaldowski/semver-release-action@v3
-        id: semantic_version_pre_minor
-        with:
-          bump: preminor
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-      -
-        name: Calculate new semantic minor version
-        if: contains(github.event.head_commit.message, '[MINOR]')
-        uses: zwaldowski/semver-release-action@v3
-        id: semantic_version_minor
-        with:
-          bump: minor
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-      -
-        name: Calculate new semantic pre-major version
-        if: contains(github.event.head_commit.message, '[PREMAJOR]')
-        uses: zwaldowski/semver-release-action@v3
-        id: semantic_version_pre_major
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-      -
-        name: Calculate new semantic major version
-        if: contains(github.event.head_commit.message, '[MAJOR]')
-        uses: zwaldowski/semver-release-action@v3
-        id: semantic_version_major
-        with:
+          bump: ${{ steps.semver_options.outputs.bump_mode }}
+          preid: ${{ steps.semver_options.outputs.preid }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
       -
         name: Build and push debug release
@@ -83,7 +55,7 @@ jobs:
           file: ./Dockerfile.debug
           platforms: linux/amd64
           push: true
-          tags: piccobit/cert-manager-webhook-hosttech:${{ github.ref_name }}-dbg
+          tags: piccobit/cert-manager-webhook-hosttech:${{ steps.semantic_version.outputs.version }}
       -
         name: Build and push pre-release
         if: contains(github.event.head_commit.message, '[PRERELEASE]')
@@ -93,7 +65,7 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64
           push: true
-          tags: piccobit/cert-manager-webhook-hosttech:${{ github.ref_name }}-rc
+          tags: piccobit/cert-manager-webhook-hosttech:${{ steps.semantic_version.outputs.version }}-rc
       -
         name: Build and push release
         if: contains(github.event.head_commit.message, '[RELEASE]')
@@ -103,4 +75,4 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64
           push: true
-          tags: piccobit/cert-manager-webhook-hosttech:${{ github.ref_name }}
+          tags: piccobit/cert-manager-webhook-hosttech:${{ steps.semantic_version.outputs.version }}

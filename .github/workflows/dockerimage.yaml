@@ -36,7 +36,7 @@ jobs:
       -
         name: Get semver options from HEAD commit
         id: semver_options
-        run: get-semver-options.sh >> $GITHUB_OUTPUT
+        run: ./get-semver-options.sh >> $GITHUB_OUTPUT
       -
         name: Generate new semantic version tag
         if: contains(github.event.head_commit.message, '[RELEASE]') || contains(github.event.head_commit.message, '[PRERELEASE]') || contains(github.event.head_commit.message, '[DEBUG]')

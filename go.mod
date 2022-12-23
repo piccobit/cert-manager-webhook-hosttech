@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/cert-manager/cert-manager v1.10.1
 	github.com/go-logr/logr v1.2.3
-	github.com/imroc/req/v3 v3.26.4
+	github.com/imroc/req/v3 v3.26.5
 	k8s.io/apiextensions-apiserver v0.26.0
 	k8s.io/apimachinery v0.26.0
 	k8s.io/client-go v0.26.0

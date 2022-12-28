@@ -61,6 +61,7 @@ type customDNSProviderConfig struct {
 
 	APIURL     string `json:"apiURL"`
 	SecretName string `json:"secretName"`
+	Timeout int `json:"timeout"`
 }
 
 func main() {
@@ -319,6 +320,7 @@ func (c *customDNSProviderSolver) initialize(cr *acmeV1.ChallengeRequest) error 
 	c.logger.WithName("loadConfig").Info("Config loaded",
 		"APIURL", c.cfg.APIURL,
 		"SecretName", c.cfg.SecretName,
+		"Timeout", c.cfg.Timeout,
 	)
 
 	secret, err := c.clientset.CoreV1().Secrets(cr.ResourceNamespace).Get(context.Background(), c.cfg.SecretName, metav1.GetOptions{})
@@ -334,7 +336,7 @@ func (c *customDNSProviderSolver) initialize(cr *acmeV1.ChallengeRequest) error 
 	bToken := secret.Data["token"]
 
 	c.token = string(bToken)
-	c.client = req.C().SetTimeout(120*time.Second)
+	c.client = req.C().SetTimeout(time.Duration(c.cfg.Timeout)*time.Second)
 
 	visToken := c.token[:10] + "..." + c.token[len(c.token)-10:]
 
